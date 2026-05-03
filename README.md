@@ -9,6 +9,9 @@ Master your habits, one day at a time. **Aura** is a premium, offline-first task
 -   **💎 Premium Glassmorphism UI:** A stunning, modern interface with smooth gradients, frosted glass effects, and high-end animations.
 -   **📅 Timeline View:** Organize your history and active tasks with a beautiful, scannable timeline.
 -   **🔄 Range Mode:** Add tasks across multiple days instantly. Perfect for setting up routines and habit streaks.
+-   **📈 Insights Dashboard:** Fresh analytics view with a GitHub‑style Aura Focus Heatmap, Tag Distribution bar chart, Hourly Focus line chart, and Punctuality breakdown.
+-   **🔍 Mobile‑First UI:** Stats, charts, and input controls now collapse gracefully on small screens, with compact buttons and responsive grids.
+-   **🏠 Clickable Aura Logo:** Tap the logo anywhere to return to the Home view instantly.
 -   **🎯 Smart Tracking:** Differentiate between tasks completed early ("Excellent!") or late ("Aim Higher!") with personalized feedback badges.
 -   **⏰ Backdating Support:** Forget to mark a task? Easily specify the actual completion date for accurate history.
 -   **🔔 Future Task Protection:** Safety prompts prevent you from accidentally closing tasks planned for future dates.
