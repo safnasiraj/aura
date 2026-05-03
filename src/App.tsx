@@ -1,47 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, CheckCircle2, Circle, Flame, Target, Trash2 } from 'lucide-react';
-
-interface Todo {
-  id: string;
-  text: string
-  completed: boolean;
-  reminderAt: string | null;
-  createdAt: string;
-}
-
-interface UserStats {
-  totalCompleted: number;
-  streak: number;
-  lastActiveDate: string | null;
-}
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db, Todo, UserStats } from './db';
 
 const App: React.FC = () => {
-  const [todos, setTodos] = useState<Todo[]>(() => {
-    const saved = localStorage.getItem('todos');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [stats, setStats] = useState<UserStats>(() => {
-    const saved = localStorage.getItem('userStats');
-    return saved ? JSON.parse(saved) : { totalCompleted: 0, streak: 0, lastActiveDate: null };
-  });
+  // Fetch real-time data from IndexedDB
+  const todos = useLiveQuery(() => db.todos.orderBy('createdAt').reverse().toArray()) || [];
+  const stats = useLiveQuery(() => db.stats.get(1)) || { id: 1, totalCompleted: 0, streak: 0, lastActiveDate: null };
 
   const [newTaskText, setNewTaskText] = useState('');
   const [reminderTime, setReminderTime] = useState('');
 
   // Check streaks and reset if missed a day
   useEffect(() => {
-    if (stats.lastActiveDate) {
-      const today = new Date().toDateString();
-      const lastDate = new Date(stats.lastActiveDate);
-      const diffTime = Math.abs(new Date(today).getTime() - lastDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const checkStreak = async () => {
+      if (stats.lastActiveDate) {
+        const today = new Date().toDateString();
+        const lastDate = new Date(stats.lastActiveDate);
+        const diffTime = Math.abs(new Date(today).getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      if (diffDays > 1 && stats.streak > 0) {
-        setStats(prev => ({ ...prev, streak: 0 }));
+        if (diffDays > 1 && stats.streak > 0) {
+          await db.stats.put({ ...stats, streak: 0 });
+        }
       }
-    }
-  }, [stats.lastActiveDate]);
+    };
+    checkStreak();
+  }, [stats.lastActiveDate, stats.streak]);
 
   // Request Notification Permission
   useEffect(() => {
@@ -63,7 +48,7 @@ const App: React.FC = () => {
             if ("Notification" in window && Notification.permission === "granted") {
               new Notification("Task Reminder", {
                 body: `It's time to: ${todo.text}`,
-                icon: '/vite.svg' // fallback icon
+                icon: '/vite.svg'
               });
             }
             notifiedReminders.current.add(todo.id);
@@ -74,16 +59,8 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [todos]);
 
-  // Save to local storage
-  useEffect(() => {
-    localStorage.setItem('todos', JSON.stringify(todos));
-  }, [todos]);
-
-  useEffect(() => {
-    localStorage.setItem('userStats', JSON.stringify(stats));
-  }, [stats]);
-
-  const handleAddTodo = (e: React.FormEvent) => {
+  // DB Operations
+  const handleAddTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
 
@@ -95,54 +72,53 @@ const App: React.FC = () => {
       createdAt: new Date().toISOString()
     };
 
-    setTodos(prev => [newTodo, ...prev]);
+    await db.todos.add(newTodo);
     setNewTaskText('');
     setReminderTime('');
   };
 
-  const toggleTodo = (id: string) => {
-    setTodos(prev => prev.map(todo => {
-      if (todo.id === id) {
-        const isCompleting = !todo.completed;
-        if (isCompleting) {
-          updateStatsOnCompletion();
-        }
-        return { ...todo, completed: isCompleting };
-      }
-      return todo;
-    }));
+  const toggleTodo = async (id: string) => {
+    const todo = await db.todos.get(id);
+    if (!todo) return;
+
+    const isCompleting = !todo.completed;
+    await db.todos.update(id, { completed: isCompleting });
+
+    if (isCompleting) {
+      await updateStatsOnCompletion();
+    }
   };
 
-  const deleteTodo = (id: string) => {
-    setTodos(prev => prev.filter(todo => todo.id !== id));
+  const deleteTodo = async (id: string) => {
+    await db.todos.delete(id);
   };
 
-  const updateStatsOnCompletion = () => {
-    setStats(prev => {
-      const todayStr = new Date().toDateString();
-      let newStreak = prev.streak;
+  const updateStatsOnCompletion = async () => {
+    const currentStats = await db.stats.get(1) || { id: 1, totalCompleted: 0, streak: 0, lastActiveDate: null };
+    const todayStr = new Date().toDateString();
+    let newStreak = currentStats.streak;
 
-      if (prev.lastActiveDate !== todayStr) {
-        if (!prev.lastActiveDate) {
-          newStreak = 1;
+    if (currentStats.lastActiveDate !== todayStr) {
+      if (!currentStats.lastActiveDate) {
+        newStreak = 1;
+      } else {
+        const lastDate = new Date(currentStats.lastActiveDate);
+        const diffTime = Math.abs(new Date(todayStr).getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          newStreak += 1;
         } else {
-          const lastDate = new Date(prev.lastActiveDate);
-          const diffTime = Math.abs(new Date(todayStr).getTime() - lastDate.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          if (diffDays === 1) {
-            newStreak += 1;
-          } else {
-            newStreak = 1;
-          }
+          newStreak = 1;
         }
       }
+    }
 
-      return {
-        totalCompleted: prev.totalCompleted + 1,
-        streak: newStreak,
-        lastActiveDate: todayStr
-      };
+    await db.stats.put({
+      id: 1,
+      totalCompleted: currentStats.totalCompleted + 1,
+      streak: newStreak,
+      lastActiveDate: todayStr
     });
   };
 
