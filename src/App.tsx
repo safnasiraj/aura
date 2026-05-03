@@ -262,7 +262,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
       </header>
 
       {view === 'tasks' && (
-        <div className="stats-container" style={{ cursor: 'pointer' }} onClick={() => setView('history')} title="View History">
+        <div className="stats-container">
           <div className="stat-item">
             <div className="stat-value">
               <Flame color="var(--secondary)" />
@@ -276,9 +276,6 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
               {stats.totalCompleted}
             </div>
             <div className="stat-label">Tasks Done</div>
-          </div>
-          <div className="stat-item" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-             <History color="var(--text-muted)" size={28} />
           </div>
         </div>
       )}
@@ -381,6 +378,31 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
           </div>
         )}
       </div>
+      
+      {view === 'tasks' && (
+        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+          <button 
+            onClick={() => setView('history')}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--border)',
+              padding: '0.75rem 1.5rem', borderRadius: '2rem',
+              color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s',
+              fontFamily: 'inherit', fontSize: '0.9rem'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.color = 'var(--text-main)';
+              e.currentTarget.style.borderColor = 'var(--primary)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.borderColor = 'var(--border)';
+            }}
+          >
+            <History size={18} /> View Task History
+          </button>
+        </div>
+      )}
     </div>
   );
 };
