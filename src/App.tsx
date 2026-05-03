@@ -1087,7 +1087,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('exam') ||
       text.includes('learn') ||
       text.includes('course') ||
-      text.includes('homework')
+      text.includes('homework') ||
+      text.includes('test')
     ) {
       suggestions = ['Read focus chapters', 'Create summary notes', 'Take practice test'];
     } else if (
@@ -1095,7 +1096,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('workout') ||
       text.includes('fitness') ||
       text.includes('run') ||
-      text.includes('training')
+      text.includes('training') ||
+      text.includes('exercise')
     ) {
       suggestions = ['Dynamic warm-up', 'Execute main routine', 'Cool down & stretch'];
     } else if (
@@ -1111,7 +1113,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('home') ||
       text.includes('house') ||
       text.includes('laundry') ||
-      text.includes('room')
+      text.includes('room') ||
+      text.includes('tidy')
     ) {
       suggestions = ['Gather all supplies', 'Focus deep-clean area', 'Tidy & organize'];
     } else if (
@@ -1119,7 +1122,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('dinner') ||
       text.includes('meal') ||
       text.includes('recipe') ||
-      text.includes('lunch')
+      text.includes('lunch') ||
+      text.includes('bake')
     ) {
       suggestions = ['Shop for ingredients', 'Prep & chop items', 'Cook & serve'];
     } else if (
@@ -1127,7 +1131,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('build') ||
       text.includes('app') ||
       text.includes('dev') ||
-      text.includes('software')
+      text.includes('software') ||
+      text.includes('bug')
     ) {
       suggestions = ['Plan architecture', 'Write core logic', 'Test & fix bugs'];
     } else if (
@@ -1143,7 +1148,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('pay') ||
       text.includes('bank') ||
       text.includes('finance') ||
-      text.includes('tax')
+      text.includes('tax') ||
+      text.includes('budget')
     ) {
       suggestions = ['Verify amount due', 'Execute payment', 'Record in tracker'];
     } else if (
@@ -1151,7 +1157,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('party') ||
       text.includes('gift') ||
       text.includes('event') ||
-      text.includes('wedding')
+      text.includes('wedding') ||
+      text.includes('anniversary')
     ) {
       suggestions = ['Send invitations', 'Arrange logistics', 'Prepare surprise/gift'];
     } else if (
@@ -1159,7 +1166,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('health') ||
       text.includes('medical') ||
       text.includes('dentist') ||
-      text.includes('appointment')
+      text.includes('appointment') ||
+      text.includes('checkup')
     ) {
       suggestions = ['Gather symptoms/info', 'Attend appointment', 'Update health logs'];
     } else if (
@@ -1167,7 +1175,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('service') ||
       text.includes('oil') ||
       text.includes('tire') ||
-      text.includes('drive')
+      text.includes('drive') ||
+      text.includes('vehicle')
     ) {
       suggestions = ['Check maintenance list', 'Book service/shop', 'Verify repairs done'];
     } else if (
@@ -1199,7 +1208,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('meditate') ||
       text.includes('breath') ||
       text.includes('relax') ||
-      text.includes('peace')
+      text.includes('peace') ||
+      text.includes('mindful')
     ) {
       suggestions = ['Prepare mat/space', 'Set focus intention', 'Post-practice rest'];
     } else if (
@@ -1207,9 +1217,78 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('video') ||
       text.includes('photo') ||
       text.includes('content') ||
-      text.includes('social')
+      text.includes('social') ||
+      text.includes('youtube') ||
+      text.includes('instagram')
     ) {
       suggestions = ['Capture/Design media', 'Draft caption/tags', 'Publish & engage'];
+    } else if (
+      text.includes('job') ||
+      text.includes('resume') ||
+      text.includes('cv') ||
+      text.includes('apply') ||
+      text.includes('career') ||
+      text.includes('linkedin')
+    ) {
+      suggestions = ['Update resume/CV', 'Research company/role', 'Submit application'];
+    } else if (
+      text.includes('art') ||
+      text.includes('paint') ||
+      text.includes('draw') ||
+      text.includes('sketch') ||
+      text.includes('creative') ||
+      text.includes('music')
+    ) {
+      suggestions = ['Set up workspace/tools', 'Draft initial idea', 'Refine & add detail'];
+    } else if (
+      text.includes('update') ||
+      text.includes('backup') ||
+      text.includes('phone') ||
+      text.includes('computer') ||
+      text.includes('laptop') ||
+      text.includes('file')
+    ) {
+      suggestions = ['Backup important files', 'Run system updates', 'Organize digital folders'];
+    } else if (
+      text.includes('friend') ||
+      text.includes('coffee') ||
+      text.includes('hangout') ||
+      text.includes('date') ||
+      text.includes('visit')
+    ) {
+      suggestions = ['Confirm time & location', 'Prepare conversation/gift', 'Enjoy & follow up'];
+    } else if (
+      text.includes('skin') ||
+      text.includes('hair') ||
+      text.includes('selfcare') ||
+      text.includes('grooming') ||
+      text.includes('bath')
+    ) {
+      suggestions = ['Prepare products/tools', 'Execute routine steps', 'Relax & hydrate'];
+    } else if (
+      text.includes('morning') ||
+      text.includes('wake') ||
+      text.includes('night') ||
+      text.includes('sleep') ||
+      text.includes('routine')
+    ) {
+      suggestions = ['Hydrate & stretch', 'Review daily goals', 'Prepare next steps'];
+    } else if (
+      text.includes('move') ||
+      text.includes('apartment') ||
+      text.includes('pack') ||
+      text.includes('box') ||
+      text.includes('relocate')
+    ) {
+      suggestions = ['Declutter & sort items', 'Pack boxes & label', 'Update address/info'];
+    } else if (
+      text.includes('fix') ||
+      text.includes('repair') ||
+      text.includes('broken') ||
+      text.includes('leak') ||
+      text.includes('maint')
+    ) {
+      suggestions = ['Assess damage/issue', 'Get tools & parts', 'Execute fix & test'];
     } else {
       suggestions = ['Define specific goal', 'Take the first step', 'Review progress'];
     }
