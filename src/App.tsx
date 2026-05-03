@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus } from 'lucide-react';
+import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus, Sparkles } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -102,9 +102,35 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
   });
 
   const sortedKeys = Object.keys(grouped).sort((a, b) => {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    
     if (a === "No Date") return -1;
     if (b === "No Date") return 1;
-    return new Date(a).getTime() - new Date(b).getTime();
+    
+    if (a === todayStr) return -1;
+    if (b === todayStr) return 1;
+
+    if (a === tomorrowStr) return -1;
+    if (b === tomorrowStr) return 1;
+
+    // For the rest, we need to know if they are past or future
+    const timeA = new Date(a).getTime();
+    const timeB = new Date(b).getTime();
+    const todayTime = new Date(todayStr).getTime();
+    const tomorrowTime = new Date(tomorrowStr).getTime();
+
+    const isPastA = timeA < todayTime;
+    const isPastB = timeB < todayTime;
+
+    if (isPastA && !isPastB) return -1; // Past comes before Future (day after tomorrow)
+    if (!isPastA && isPastB) return 1;
+
+    return timeA - timeB; 
   });
 
   return (
@@ -193,7 +219,35 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const todos = useLiveQuery(() => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'), [userId]) || [];
   const stats = useLiveQuery(() => db.stats.get(userId), [userId]) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
 
-  const activeTodos = todos.filter(t => !t.completed);
+  const activeTodos = [...todos.filter(t => !t.completed)].sort((a, b) => {
+    const now = new Date();
+    const todayStr = now.toDateString();
+    
+    const getPriority = (todo: any) => {
+      if (!todo.reminderAt) return 1; // No date
+      
+      const todoDate = new Date(todo.reminderAt);
+      const todoDateStr = todoDate.toDateString();
+      
+      if (todoDateStr === todayStr) return 2; // Today
+      
+      // If not today, check if it's past or future
+      if (todoDate < now) return 3; // Yet to close (Past)
+      return 4; // Future
+    };
+
+    const pA = getPriority(a);
+    const pB = getPriority(b);
+
+    if (pA !== pB) return pA - pB;
+    
+    // Within the same group, sort by time/date
+    if (a.reminderAt && b.reminderAt) {
+      return new Date(a.reminderAt).getTime() - new Date(b.reminderAt).getTime();
+    }
+    // For no-date tasks, sort by creation time (newest first)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
   const completedTodos = todos.filter(t => t.completed);
 
   // Check streaks and reset if missed a day
@@ -428,24 +482,51 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
 
   return (
     <div className="app-container">
-      <header style={{ position: 'relative' }}>
+      <header style={{ position: 'relative', paddingBottom: '1rem' }}>
         <button 
           onClick={onLogout} 
-          style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          style={{ 
+            position: 'absolute', 
+            right: 0, 
+            top: 0, 
+            background: 'rgba(255,255,255,0.05)', 
+            border: '1px solid var(--border)', 
+            color: 'var(--text-muted)', 
+            cursor: 'pointer',
+            padding: '0.5rem',
+            borderRadius: '0.75rem',
+            zIndex: 10,
+            transition: 'all 0.2s'
+          }}
+          className="icon-hover-btn"
           title="Logout"
         >
-          <LogOut size={24} />
+          <LogOut size={20} />
         </button>
         {view === 'history' && (
           <button 
             onClick={() => setView('tasks')} 
-            style={{ position: 'absolute', left: 0, top: 0, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{ 
+              position: 'absolute', 
+              left: 0, 
+              top: 0, 
+              background: 'rgba(255,255,255,0.05)', 
+              border: '1px solid var(--border)', 
+              color: 'var(--text-muted)', 
+              cursor: 'pointer',
+              padding: '0.5rem',
+              borderRadius: '0.75rem',
+              zIndex: 10
+            }}
             title="Back to Tasks"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={20} />
           </button>
         )}
-        <h1>re-marking</h1>
+        <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
+          <img src="/logo.png" alt="Aura Logo" style={{ width: '48px', height: '48px', borderRadius: '50%', boxShadow: '0 0 15px var(--secondary-glow)' }} />
+          Aura
+        </h1>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
       </header>
 

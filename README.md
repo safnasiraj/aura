@@ -1,8 +1,8 @@
-# ✨ re-marking
+# ✨ Aura
 
-Master your habits, one day at a time. **re-marking** is a premium, offline-first task management and habit-tracking application built with modern web technologies. It focuses on privacy, organization, and visual excellence.
+Master your habits, one day at a time. **Aura** is a premium, offline-first task management and habit-tracking application built with modern web technologies. It focuses on privacy, organization, and visual excellence.
 
-![Screenshot Placeholder](https://via.placeholder.com/1200x600?text=Re-marking+Premium+UI)
+![Aura Premium UI](./public/aura-cover.png)
 
 ## 🚀 Key Features
 
@@ -74,7 +74,7 @@ This project is configured for easy deployment to **GitHub Pages** via GitHub Ac
 
 ## 🛡️ Privacy & Security
 
-**re-marking** is designed with zero-cost and maximum privacy in mind:
+**Aura** is designed with zero-cost and maximum privacy in mind:
 -   No account required.
 -   No external servers or cloud databases.
 -   No tracking or analytics.
