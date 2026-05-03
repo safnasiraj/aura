@@ -1508,6 +1508,15 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
     ) {
       suggestions = ['Shop for ingredients', 'Prep & chop items', 'Cook & serve'];
     } else if (
+      text.includes('doctor') ||
+      text.includes('health') ||
+      text.includes('medical') ||
+      text.includes('dentist') ||
+      text.includes('appointment') ||
+      text.includes('checkup')
+    ) {
+      suggestions = ['Gather symptoms/info', 'Attend appointment', 'Update logs'];
+    } else if (
       text.includes('code') ||
       text.includes('build') ||
       text.includes('app') ||
@@ -1542,15 +1551,6 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       text.includes('anniversary')
     ) {
       suggestions = ['Send invitations', 'Arrange logistics', 'Prepare surprise/gift'];
-    } else if (
-      text.includes('doctor') ||
-      text.includes('health') ||
-      text.includes('medical') ||
-      text.includes('dentist') ||
-      text.includes('appointment') ||
-      text.includes('checkup')
-    ) {
-      suggestions = ['Gather symptoms/info', 'Attend appointment', 'Update health logs'];
     } else if (
       text.includes('car') ||
       text.includes('service') ||
