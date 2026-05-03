@@ -13,6 +13,9 @@ import {
   Plus,
   BarChart2,
   Sparkles,
+  Play,
+  Pause,
+  RotateCcw,
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
@@ -475,8 +478,225 @@ const TaskHistoryList: React.FC<{ todos: Todo[]; renderTask: (todo: Todo) => Rea
     </div>
   );
 };
+
+const ZenMode: React.FC<{ onPointsEarned: (points: number) => void }> = ({ onPointsEarned }) => {
+  const [duration, setDuration] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(30 * 60);
+  const [isActive, setIsActive] = useState(false);
+  const [isBreak, setIsBreak] = useState(false);
+  const secondsSpent = useRef(0);
+
+  useEffect(() => {
+    let interval: number | undefined;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Timer finished!
+            setIsActive(false);
+            if (!isBreak) {
+              const totalPoints = duration * 3;
+              onPointsEarned(totalPoints);
+              secondsSpent.current = 0;
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Zen Session Complete!', {
+                  body: `You earned +${totalPoints} Aura points. Take a break.`,
+                });
+              }
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+        if (!isBreak) secondsSpent.current += 1;
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, isBreak, onPointsEarned, duration, timeLeft]);
+
+  const givePartialPoints = () => {
+    if (!isBreak && secondsSpent.current >= 60) {
+      const mins = Math.floor(secondsSpent.current / 60);
+      onPointsEarned(mins);
+      secondsSpent.current = 0;
+    }
+  };
+
+  const toggleTimer = () => {
+    if (isActive) givePartialPoints();
+    setIsActive(!isActive);
+  };
+  const resetTimer = () => {
+    givePartialPoints();
+    setIsActive(false);
+    setTimeLeft(isBreak ? 5 * 60 : duration * 60);
+  };
+  const switchMode = () => {
+    givePartialPoints();
+    const nextIsBreak = !isBreak;
+    setIsBreak(nextIsBreak);
+    setTimeLeft(nextIsBreak ? 5 * 60 : duration * 60);
+    setIsActive(false);
+  };
+
+  const changeDuration = (mins: number) => {
+    if (isActive) givePartialPoints();
+    setDuration(mins);
+    setTimeLeft(mins * 60);
+    setIsActive(false);
+    setIsBreak(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const totalTime = isBreak ? 5 * 60 : duration * 60;
+  const progress = (timeLeft / totalTime) * 100;
+
+  return (
+    <div className={`zen-container ${isActive ? 'active' : ''}`}>
+      <div
+        className="glass-panel"
+        style={{ padding: '3rem', textAlign: 'center', maxWidth: '450px', margin: '0 auto' }}
+      >
+        <h2
+          style={{
+            color: isBreak ? 'var(--secondary)' : 'var(--primary)',
+            marginBottom: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+          }}
+        >
+          <Sparkles size={24} /> {isBreak ? 'Zen Break' : 'Deep Focus'}
+        </h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+          {isBreak ? 'Rest your mind, regain your glow.' : 'Silence the noise. Ascend to flow.'}
+        </p>
+
+        {!isBreak && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              justifyContent: 'center',
+              marginBottom: '1rem',
+            }}
+          >
+            {[5, 10, 30].map((mins) => (
+              <button
+                key={mins}
+                onClick={() => changeDuration(mins)}
+                style={{
+                  background: duration === mins ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--border)',
+                  color: duration === mins ? 'white' : 'var(--text-muted)',
+                  padding: '0.4rem 1rem',
+                  borderRadius: '2rem',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {mins}m
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div style={{ position: 'relative', width: '220px', height: '220px', margin: '2rem auto' }}>
+          <svg width="220" height="220" style={{ transform: 'rotate(-90deg)' }}>
+            <circle
+              cx="110"
+              cy="110"
+              r="100"
+              fill="none"
+              stroke="rgba(255,255,255,0.05)"
+              strokeWidth="10"
+            />
+            <circle
+              cx="110"
+              cy="110"
+              r="100"
+              fill="none"
+              stroke={isBreak ? 'var(--secondary)' : 'var(--primary)'}
+              strokeWidth="10"
+              strokeDasharray="628.3"
+              strokeDashoffset={628.3 * (1 - progress / 100)}
+              strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 1s linear' }}
+            />
+          </svg>
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div
+              style={{ fontSize: '3.5rem', fontWeight: '800', fontVariantNumeric: 'tabular-nums' }}
+            >
+              {formatTime(timeLeft)}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
+          <button
+            onClick={toggleTimer}
+            className="add-btn"
+            style={{ width: '70px', height: '70px', borderRadius: '50%', padding: 0 }}
+          >
+            {isActive ? <Pause size={32} /> : <Play size={32} style={{ marginLeft: '4px' }} />}
+          </button>
+          <button
+            onClick={resetTimer}
+            className="add-btn"
+            style={{
+              width: '70px',
+              height: '70px',
+              borderRadius: '50%',
+              padding: 0,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <RotateCcw size={28} />
+          </button>
+        </div>
+
+        <button
+          onClick={switchMode}
+          style={{
+            marginTop: '2.5rem',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            fontSize: '0.9rem',
+            opacity: 0.7,
+            transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+        >
+          Switch to {isBreak ? 'Focus Session' : 'Short Break'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, onLogout }) => {
-  const [view, setView] = useState<'tasks' | 'history' | 'insights'>('tasks');
+  const [view, setView] = useState<'tasks' | 'history' | 'insights' | 'zen'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
   const [reminderDate, setReminderDate] = useState<Date | null>(null);
   const [confirmTask, setConfirmTask] = useState<string | null>(null);
@@ -688,6 +908,14 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       }
     }
     return points;
+  };
+
+  const getAuraRank = (points: number) => {
+    if (points >= 10000) return { title: 'Enlightened One', color: '#fbbf24', icon: '💎' };
+    if (points >= 5000) return { title: 'Aura Adept', color: '#f43f5e', icon: '🔥' };
+    if (points >= 2000) return { title: 'Glow Getter', color: '#a855f7', icon: '✨' };
+    if (points >= 500) return { title: 'Spark Seeker', color: '#06b6d4', icon: '⚡' };
+    return { title: 'Neon Novice', color: '#6366f1', icon: '🌑' };
   };
 
   const deleteTodo = async (id: string) => {
@@ -1104,12 +1332,26 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
           <div className="stat-item" style={{ borderLeft: '4px solid var(--secondary)' }}>
             <div className="stat-label">Aura Streak</div>
             <div className="stat-value">
-              <Flame
-                size={28}
-                color="var(--secondary)"
-                fill="var(--secondary)"
-                style={{ filter: 'drop-shadow(0 0 8px var(--secondary-glow))' }}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Flame
+                  size={28}
+                  color="var(--secondary)"
+                  fill="var(--secondary)"
+                  style={{ filter: 'drop-shadow(0 0 8px var(--secondary-glow))' }}
+                />
+                <span
+                  title={`Rank: ${getAuraRank(stats.auraPoints || 0).title}`}
+                  style={{
+                    fontSize: '1rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    padding: '0.2rem 0.4rem',
+                    borderRadius: '0.5rem',
+                    border: `1px solid ${getAuraRank(stats.auraPoints || 0).color}44`,
+                  }}
+                >
+                  {getAuraRank(stats.auraPoints || 0).icon}
+                </span>
+              </div>
               {stats.streak}
             </div>
           </div>
@@ -1122,6 +1364,18 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                 style={{ filter: 'drop-shadow(0 0 8px var(--primary-glow))' }}
               />
               {(stats.auraPoints || 0).toLocaleString()}
+            </div>
+          </div>
+          <div
+            className="stat-item"
+            style={{ borderLeft: `4px solid ${getAuraRank(stats.auraPoints || 0).color}` }}
+          >
+            <div className="stat-label">Aura Rank</div>
+            <div className="stat-value" style={{ fontSize: '1.2rem', fontWeight: '700' }}>
+              <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>
+                {getAuraRank(stats.auraPoints || 0).icon}
+              </span>
+              {getAuraRank(stats.auraPoints || 0).title}
             </div>
           </div>
         </div>
@@ -1411,8 +1665,10 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
             </h2>
             <TaskHistoryList todos={completedTodos} renderTask={renderTask} />
           </div>
-        ) : (
+        ) : view === 'insights' ? (
           <InsightsView todos={todos} />
+        ) : (
+          <ZenMode onPointsEarned={(points) => updateStatsOnCompletion(points)} />
         )}
       </div>
       <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
@@ -1436,6 +1692,19 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
               }}
             >
               <BarChart2 size={18} style={{ marginRight: '0.5rem' }} /> Insights
+            </button>
+            <button
+              onClick={() => setView('zen')}
+              className="load-more-btn"
+              style={{
+                flex: 1,
+                marginTop: 0,
+                background:
+                  'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(6, 182, 212, 0.1))',
+                borderColor: 'rgba(34, 197, 94, 0.3)',
+              }}
+            >
+              <Sparkles size={18} style={{ marginRight: '0.5rem' }} /> Zen
             </button>
           </>
         ) : (
