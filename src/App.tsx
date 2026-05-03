@@ -17,6 +17,10 @@ import {
   Pause,
   RotateCcw,
   Search,
+  CloudRain,
+  Music,
+  Moon,
+  VolumeX,
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
@@ -480,12 +484,67 @@ const TaskHistoryList: React.FC<{ todos: Todo[]; renderTask: (todo: Todo) => Rea
   );
 };
 
+const SOUNDSCAPES = [
+  { id: 'none', label: 'Silence', url: '', icon: <VolumeX size={16} /> },
+  {
+    id: 'rain',
+    label: 'Neon Rain',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    icon: <CloudRain size={16} />,
+  },
+  {
+    id: 'lofi',
+    label: 'Cyber Lo-Fi',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3',
+    icon: <Music size={16} />,
+  },
+  {
+    id: 'space',
+    label: 'Deep Space',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    icon: <Moon size={16} />,
+  },
+];
+
 const ZenMode: React.FC<{ onPointsEarned: (points: number) => void }> = ({ onPointsEarned }) => {
   const [duration, setDuration] = useState(30);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [isActive, setIsActive] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const secondsSpent = useRef(0);
+  const [selectedSound, setSelectedSound] = useState('none');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (isActive && selectedSound !== 'none') {
+      const sound = SOUNDSCAPES.find((s) => s.id === selectedSound);
+      if (sound && sound.url) {
+        if (!audioRef.current) {
+          audioRef.current = new Audio(sound.url);
+          audioRef.current.loop = true;
+          audioRef.current.volume = 0.5;
+        } else if (audioRef.current.src !== sound.url) {
+          audioRef.current.pause();
+          audioRef.current.src = sound.url;
+          audioRef.current.load();
+        }
+        audioRef.current.play().catch((e) => console.log('Audio autoplay blocked or error:', e));
+      }
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    }
+  }, [isActive, selectedSound]);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -609,6 +668,39 @@ const ZenMode: React.FC<{ onPointsEarned: (points: number) => void }> = ({ onPoi
             ))}
           </div>
         )}
+
+        <div
+          style={{
+            marginTop: '1.5rem',
+            display: 'flex',
+            gap: '0.4rem',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          {SOUNDSCAPES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSelectedSound(s.id)}
+              style={{
+                background: selectedSound === s.id ? 'var(--primary)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${selectedSound === s.id ? 'var(--primary)' : 'var(--border)'}`,
+                color: selectedSound === s.id ? 'white' : 'var(--text-muted)',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '0.75rem',
+                fontSize: '0.7rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {s.icon} {s.label}
+            </button>
+          ))}
+        </div>
 
         <div style={{ position: 'relative', width: '220px', height: '220px', margin: '2rem auto' }}>
           <svg width="220" height="220" style={{ transform: 'rotate(-90deg)' }}>
