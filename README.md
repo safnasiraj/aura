@@ -60,4 +60,4 @@ This project is configured for easy deployment to **GitHub Pages** via GitHub Ac
 -   Data is stored using [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), making it completely offline-capable.
 
 ---
-Built with ❤️ by [Your Name/Handle]
+Built with ❤️ by SaFz
