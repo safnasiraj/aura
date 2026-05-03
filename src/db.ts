@@ -15,6 +15,7 @@ export interface Todo {
   reminderAt: string | null;
   createdAt: string;
   completedAt: string | null;
+  category?: 'Work' | 'Personal' | 'Fitness' | 'Urgent';
 }
 
 export interface UserStats {

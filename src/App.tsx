@@ -315,11 +315,15 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const [isRange, setIsRange] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [selectedCategory, setSelectedCategory] = useState<Todo['category']>();
+  const [filterCategory, setFilterCategory] = useState<Todo['category'] | 'All'>('All');
 
   const todos = useLiveQuery(() => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'), [userId]) || [];
   const stats = useLiveQuery(() => db.stats.get(userId), [userId]) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
 
-  const activeTodos = [...todos.filter(t => !t.completed)].sort((a, b) => {
+  const activeTodos = [...todos.filter(t => !t.completed)]
+    .filter(t => filterCategory === 'All' || t.category === filterCategory)
+    .sort((a, b) => {
     const now = new Date();
     const todayStr = now.toDateString();
     
@@ -415,7 +419,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
           completed: false,
           reminderAt: current.toISOString(),
           createdAt: new Date().toISOString(),
-          completedAt: null
+          completedAt: null,
+          category: selectedCategory
         });
         current.setDate(current.getDate() + 1);
       }
@@ -429,7 +434,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
         completed: false,
         reminderAt: reminderDate ? reminderDate.toISOString() : null,
         createdAt: new Date().toISOString(),
-        completedAt: null
+        completedAt: null,
+        category: selectedCategory
       };
       await db.todos.add(newTodo);
     }
@@ -437,6 +443,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
     setNewTaskText('');
     setReminderDate(null);
     setEndDate(null);
+    setSelectedCategory(undefined);
     setIsRange(false);
   };
 
@@ -524,6 +531,12 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
         </button>
         <div className="todo-info">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {todo.category && (
+              <span 
+                className={`category-dot tag-${todo.category.toLowerCase()}`} 
+                title={todo.category}
+              />
+            )}
             <span className="todo-text">{todo.text}</span>
             {todo.completed && todo.reminderAt && todo.completedAt && (() => {
               const r = new Date(todo.reminderAt);
@@ -653,6 +666,20 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
         {view === 'tasks' ? (
           <>
             <form onSubmit={handleAddTodo} className="input-group">
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', marginRight: '0.25rem' }}>Tag:</span>
+                {(['Work', 'Personal', 'Fitness', 'Urgent'] as const).map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? undefined : cat)}
+                    className={`category-chip ${selectedCategory === cat ? 'active' : ''} tag-${cat.toLowerCase()}`}
+                    style={{ padding: '0.3rem 0.8rem', fontSize: '0.7rem' }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
               <div className="input-row">
                 <input
                   type="text"
@@ -763,6 +790,24 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             </form>
 
             <div className="todo-list">
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginRight: '0.25rem' }}>Filter:</span>
+                <button 
+                  onClick={() => setFilterCategory('All')}
+                  className={`filter-chip ${filterCategory === 'All' ? 'active' : ''}`}
+                >
+                  All
+                </button>
+                {(['Work', 'Personal', 'Fitness', 'Urgent'] as const).map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setFilterCategory(cat)}
+                    className={`filter-chip ${filterCategory === cat ? 'active' : ''} tag-${cat.toLowerCase()}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
               {activeTodos.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>
                   All caught up! Nothing to do.
