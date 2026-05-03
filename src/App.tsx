@@ -565,7 +565,7 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
         </ResponsiveContainer>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+      <div className="insights-grid-stats">
         <div
           className="glass-panel"
           style={{
@@ -630,7 +630,7 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div className="insights-grid-charts">
         <div className="glass-panel" style={{ padding: '1.5rem', height: '300px' }}>
           <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
             Tag Distribution

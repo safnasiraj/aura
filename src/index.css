@@ -140,6 +140,35 @@ h1 {
   animation: slideUp 1s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* Insights grid layouts */
+.insights-grid-stats {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+}
+
+.insights-grid-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .insights-grid-stats,
+  .insights-grid-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .insights-view .glass-panel {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  .insights-view .glass-panel[style*='height: 300px'] {
+    height: 220px !important;
+  }
+}
+
 .input-group {
   display: flex;
   flex-direction: column;
