@@ -37,6 +37,11 @@ import {
   Cell,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  CartesianGrid,
 } from 'recharts';
 
 const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
@@ -484,6 +489,31 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
     },
   ].filter((d) => d.value > 0);
 
+  const tagData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    completed.forEach((t) => {
+      const cat = t.category || 'Other';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [completed]);
+
+  const hourlyData = useMemo(() => {
+    const hours = Array(24).fill(0);
+    completed.forEach((t) => {
+      if (t.completedAt) {
+        const hour = new Date(t.completedAt).getHours();
+        hours[hour]++;
+      }
+    });
+    return hours.map((count, hour) => ({
+      hour: hour === 0 ? '12am' : hour === 12 ? '12pm' : hour > 12 ? `${hour - 12}pm` : `${hour}am`,
+      count,
+    }));
+  }, [completed]);
+
   return (
     <div
       className="insights-view"
@@ -535,9 +565,17 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
         </ResponsiveContainer>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+        <div
+          className="glass-panel"
+          style={{
+            padding: '1.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
             Total Tasks
           </h3>
           <p style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>{todos.length}</p>
@@ -547,38 +585,118 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
         </div>
         <div
           className="glass-panel"
-          style={{
-            padding: '1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
+          style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem' }}
         >
-          <ResponsiveContainer width="100%" height={100}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                innerRadius={30}
-                outerRadius={40}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {statusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.7rem' }}>
-            {statusData.map((d) => (
-              <span key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} />{' '}
-                {d.name}
-              </span>
-            ))}
+          <div style={{ width: '100px', height: '100px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={statusData}
+                  innerRadius={25}
+                  outerRadius={35}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {statusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+              Punctuality
+            </h3>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              {statusData.map((d) => (
+                <div
+                  key={d.name}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} />
+                  <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>{d.name}:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="glass-panel" style={{ padding: '1.5rem', height: '300px' }}>
+          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            Tag Distribution
+          </h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={tagData} layout="vertical">
+              <XAxis type="number" hide />
+              <YAxis
+                dataKey="name"
+                type="category"
+                stroke="var(--text-muted)"
+                fontSize={10}
+                width={70}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                contentStyle={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.5rem',
+                }}
+              />
+              <Bar dataKey="value" fill="var(--primary)" radius={[0, 4, 4, 0]} barSize={20} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="glass-panel" style={{ padding: '1.5rem', height: '300px' }}>
+          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            Hourly Focus
+          </h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={hourlyData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.05)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="hour"
+                stroke="var(--text-muted)"
+                fontSize={9}
+                interval={3}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis hide />
+              <Tooltip
+                contentStyle={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.5rem',
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="var(--secondary)"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6, fill: 'var(--secondary)', stroke: 'white' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
