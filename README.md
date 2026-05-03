@@ -49,8 +49,8 @@ Master your habits, one day at a time. **Aura** is a premium, offline-first task
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/re-marking.git
-    cd re-marking
+    git clone https://github.com/YOUR_USERNAME/aura.git
+    cd aura
     ```
 
 2.  **Install dependencies:**
