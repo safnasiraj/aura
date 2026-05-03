@@ -695,6 +695,18 @@ const ZenMode: React.FC<{ onPointsEarned: (points: number) => void }> = ({ onPoi
   );
 };
 
+const getAuraRank = (points: number) => {
+  if (points >= 10000)
+    return { title: 'Enlightened One', color: '#fbbf24', secondary: '#f59e0b', icon: '💎' };
+  if (points >= 5000)
+    return { title: 'Aura Adept', color: '#f43f5e', secondary: '#e11d48', icon: '🔥' };
+  if (points >= 2000)
+    return { title: 'Glow Getter', color: '#a855f7', secondary: '#d946ef', icon: '✨' };
+  if (points >= 500)
+    return { title: 'Spark Seeker', color: '#06b6d4', secondary: '#2dd4bf', icon: '⚡' };
+  return { title: 'Neon Novice', color: '#6366f1', secondary: '#fb923c', icon: '🌑' };
+};
+
 const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, onLogout }) => {
   const [view, setView] = useState<'tasks' | 'history' | 'insights' | 'zen'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
@@ -712,6 +724,7 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
     () => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'),
     [userId]
   );
+
   const todos = useMemo(() => liveTodos || [], [liveTodos]);
 
   const liveStats = useLiveQuery(() => db.stats.get(userId), [userId]);
@@ -726,6 +739,15 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       },
     [liveStats, userId]
   );
+
+  useEffect(() => {
+    const rank = getAuraRank(stats.auraPoints || 0);
+    const root = document.documentElement;
+    root.style.setProperty('--primary', rank.color);
+    root.style.setProperty('--primary-glow', `${rank.color}44`);
+    root.style.setProperty('--secondary', rank.secondary);
+    root.style.setProperty('--secondary-glow', `${rank.secondary}44`);
+  }, [stats.auraPoints]);
 
   const activeTodos = [...todos.filter((t) => !t.completed)]
     .filter((t) => filterCategory === 'All' || t.category === filterCategory)
@@ -908,14 +930,6 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       }
     }
     return points;
-  };
-
-  const getAuraRank = (points: number) => {
-    if (points >= 10000) return { title: 'Enlightened One', color: '#fbbf24', icon: '💎' };
-    if (points >= 5000) return { title: 'Aura Adept', color: '#f43f5e', icon: '🔥' };
-    if (points >= 2000) return { title: 'Glow Getter', color: '#a855f7', icon: '✨' };
-    if (points >= 500) return { title: 'Spark Seeker', color: '#06b6d4', icon: '⚡' };
-    return { title: 'Neon Novice', color: '#6366f1', icon: '🌑' };
   };
 
   const deleteTodo = async (id: string) => {

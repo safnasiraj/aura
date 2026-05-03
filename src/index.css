@@ -3,11 +3,11 @@
 :root {
   --bg-gradient:
     radial-gradient(at 0% 0%, #0f172a 0%, transparent 50%),
-    radial-gradient(at 50% 0%, #1e1b4b 0%, transparent 50%),
-    radial-gradient(at 100% 0%, #581c87 0%, transparent 50%),
-    radial-gradient(at 0% 100%, #312e81 0%, transparent 50%),
-    radial-gradient(at 50% 100%, #701a75 0%, transparent 50%),
-    radial-gradient(at 100% 100%, #9a3412 0%, transparent 50%), #0f172a;
+    radial-gradient(at 50% 0%, rgba(129, 140, 248, 0.15) 0%, transparent 50%),
+    radial-gradient(at 100% 0%, var(--primary) 0%, transparent 50%),
+    radial-gradient(at 0% 100%, #0f172a 0%, transparent 50%),
+    radial-gradient(at 50% 100%, var(--secondary) 0%, transparent 50%),
+    radial-gradient(at 100% 100%, #0f172a 0%, transparent 50%), #0f172a;
   --surface: rgba(15, 23, 42, 0.4);
   --surface-active: rgba(15, 23, 42, 0.6);
   --primary: #818cf8;
