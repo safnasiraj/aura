@@ -187,6 +187,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const [confirmTask, setConfirmTask] = useState<string | null>(null);
   const [lateConfirmTask, setLateConfirmTask] = useState<string | null>(null);
   const [manualCompletionDate, setManualCompletionDate] = useState<Date>(new Date());
+  const [isRange, setIsRange] = useState(false);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   const todos = useLiveQuery(() => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'), [userId]) || [];
   const stats = useLiveQuery(() => db.stats.get(userId), [userId]) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
@@ -245,19 +247,43 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
     e.preventDefault();
     if (!newTaskText.trim()) return;
 
-    const newTodo: Todo = {
-      id: crypto.randomUUID(),
-      userId,
-      text: newTaskText,
-      completed: false,
-      reminderAt: reminderDate ? reminderDate.toISOString() : null,
-      createdAt: new Date().toISOString(),
-      completedAt: null
-    };
+    if (isRange && reminderDate && endDate) {
+      const start = new Date(reminderDate);
+      const end = new Date(endDate);
+      const tasks = [];
+      
+      let current = new Date(start);
+      while (current <= end) {
+        tasks.push({
+          id: crypto.randomUUID(),
+          userId,
+          text: newTaskText,
+          completed: false,
+          reminderAt: current.toISOString(),
+          createdAt: new Date().toISOString(),
+          completedAt: null
+        });
+        current.setDate(current.getDate() + 1);
+      }
+      
+      await db.todos.bulkAdd(tasks);
+    } else {
+      const newTodo: Todo = {
+        id: crypto.randomUUID(),
+        userId,
+        text: newTaskText,
+        completed: false,
+        reminderAt: reminderDate ? reminderDate.toISOString() : null,
+        createdAt: new Date().toISOString(),
+        completedAt: null
+      };
+      await db.todos.add(newTodo);
+    }
 
-    await db.todos.add(newTodo);
     setNewTaskText('');
     setReminderDate(null);
+    setEndDate(null);
+    setIsRange(false);
   };
 
   const toggleTodo = async (id: string) => {
@@ -454,14 +480,37 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                   onChange={(e) => setNewTaskText(e.target.value)}
                   required
                 />
+                <button 
+                  type="button"
+                  onClick={() => setIsRange(!isRange)}
+                  className={`range-toggle ${isRange ? 'active' : ''}`}
+                  title="Add task for a range of dates"
+                  style={{ 
+                    background: isRange ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                    color: isRange ? 'white' : 'var(--text-muted)',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 0.8rem',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    transition: 'all 0.2s',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {isRange ? 'Range Mode ON' : 'Add Range'}
+                </button>
               </div>
               <div className="input-row" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, position: 'relative', minWidth: '200px' }}>
                   <DatePicker
                     selected={reminderDate}
                     onChange={(date: Date | null) => setReminderDate(date)}
+                    selectsStart
+                    startDate={reminderDate}
+                    endDate={endDate}
                     dateFormat="MMM d, yyyy"
-                    placeholderText="Add Date..."
+                    placeholderText={isRange ? "Start Date" : "Add Date..."}
                     isClearable
                     className="custom-datepicker"
                     customInput={
@@ -470,14 +519,43 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                         <input 
                           value={reminderDate ? reminderDate.toLocaleDateString() : ''}
                           readOnly
-                          placeholder="Date (Optional)" 
+                          placeholder={isRange ? "Start Date" : "Date (Optional)"} 
                           style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }} 
                         />
                       </div>
                     }
                   />
                 </div>
-                {reminderDate && (
+
+                {isRange && (
+                  <div style={{ flex: 1, position: 'relative', minWidth: '200px' }}>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date: Date | null) => setEndDate(date)}
+                      selectsEnd
+                      startDate={reminderDate}
+                      endDate={endDate}
+                      minDate={reminderDate || undefined}
+                      dateFormat="MMM d, yyyy"
+                      placeholderText="End Date"
+                      isClearable
+                      className="custom-datepicker"
+                      customInput={
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.8rem 1rem', cursor: 'pointer' }}>
+                          <Calendar size={18} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
+                          <input 
+                            value={endDate ? endDate.toLocaleDateString() : ''}
+                            readOnly
+                            placeholder="End Date" 
+                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }} 
+                          />
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
+
+                {reminderDate && !isRange && (
                   <div style={{ flex: 1, position: 'relative', minWidth: '120px' }}>
                     <DatePicker
                       selected={reminderDate}
