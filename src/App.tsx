@@ -87,6 +87,55 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
   );
 };
 
+const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => React.ReactNode }> = ({ todos, renderTask }) => {
+  const grouped: Record<string, Todo[]> = {};
+
+  todos.forEach(todo => {
+    let dateStr = "No Date";
+    if (todo.reminderAt) {
+      const d = new Date(todo.reminderAt); 
+      dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
+    if (!grouped[dateStr]) grouped[dateStr] = [];
+    grouped[dateStr].push(todo);
+  });
+
+  const sortedKeys = Object.keys(grouped).sort((a, b) => {
+    if (a === "No Date") return -1;
+    if (b === "No Date") return 1;
+    return new Date(a).getTime() - new Date(b).getTime();
+  });
+
+  return (
+    <div className="history-timeline">
+      {sortedKeys.map(dateStr => (
+        <div key={dateStr} className="timeline-group" style={{ marginBottom: '1.5rem' }}>
+          <div className="timeline-header" style={{ 
+            color: 'var(--text-main)', 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            borderBottom: '1px solid rgba(255,255,255,0.1)', 
+            paddingBottom: '0.5rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>{dateStr}</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '1rem' }}>
+              {grouped[dateStr].length} {grouped[dateStr].length === 1 ? 'task' : 'tasks'}
+            </span>
+          </div>
+          <div className="timeline-tasks" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {grouped[dateStr].map(renderTask)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => React.ReactNode }> = ({ todos, renderTask }) => {
   if (todos.length === 0) {
     return <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>No completed tasks yet.</p>;
@@ -210,6 +259,20 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const toggleTodo = async (id: string) => {
     const todo = await db.todos.get(id);
     if (!todo) return;
+
+    if (!todo.completed && todo.reminderAt) {
+      const reminderDate = new Date(todo.reminderAt);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const reminderDay = new Date(reminderDate);
+      reminderDay.setHours(0, 0, 0, 0);
+
+      if (reminderDay > today) {
+        if (!window.confirm("This task is planned for a future date. Are you sure you want to mark it as done now?")) {
+          return;
+        }
+      }
+    }
 
     const isCompleting = !todo.completed;
     await db.todos.update(id, { completed: isCompleting });
@@ -406,7 +469,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                   All caught up! Nothing to do.
                 </p>
               ) : (
-                activeTodos.map(renderTask)
+                <ActiveTaskList todos={activeTodos} renderTask={renderTask} />
               )}
             </div>
           </>
