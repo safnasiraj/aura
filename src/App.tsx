@@ -47,7 +47,10 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
   return (
     <div className="app-container" style={{ maxWidth: '400px' }}>
       <header>
-        <h1>re-marking</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+          <img src="./logo.png" alt="Aura Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', boxShadow: '0 0 10px var(--secondary-glow)' }} />
+          <h1 style={{ margin: 0, fontSize: '2.5rem' }}>Aura</h1>
+        </div>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
       </header>
 
@@ -83,6 +86,10 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
           {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
         </p>
       </div>
+
+      <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2rem', fontSize: '0.9rem', opacity: 0.7 }}>
+        Built with ❤️ by <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>SaFz</span>
+      </p>
     </div>
   );
 };
@@ -204,7 +211,6 @@ const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Rea
     </div>
   );
 };
-
 const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, onLogout }) => {
   const [view, setView] = useState<'tasks' | 'history'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
@@ -214,6 +220,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const [manualCompletionDate, setManualCompletionDate] = useState<Date>(new Date());
   const [isRange, setIsRange] = useState(false);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const todos = useLiveQuery(() => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'), [userId]) || [];
   const stats = useLiveQuery(() => db.stats.get(userId), [userId]) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
@@ -623,7 +630,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                   </div>
                 )}
 
-                {reminderDate && !isRange && (
+                {reminderDate && (
                   <div style={{ flex: 1, position: 'relative', minWidth: '120px' }}>
                     <DatePicker
                       selected={reminderDate}
@@ -667,7 +674,17 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                   All caught up! Nothing to do.
                 </p>
               ) : (
-                <ActiveTaskList todos={activeTodos} renderTask={renderTask} />
+                <>
+                  <ActiveTaskList todos={activeTodos.slice(0, visibleCount)} renderTask={renderTask} />
+                  {activeTodos.length > visibleCount && (
+                    <button 
+                      onClick={() => setVisibleCount(prev => prev + 10)}
+                      className="load-more-btn"
+                    >
+                      Show More ({activeTodos.length - visibleCount} remaining)
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </>
