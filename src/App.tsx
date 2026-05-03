@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus, Sparkles } from 'lucide-react';
+import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -122,7 +122,6 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
     const timeA = new Date(a).getTime();
     const timeB = new Date(b).getTime();
     const todayTime = new Date(todayStr).getTime();
-    const tomorrowTime = new Date(tomorrowStr).getTime();
 
     const isPastA = timeA < todayTime;
     const isPastB = timeB < todayTime;
