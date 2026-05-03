@@ -386,14 +386,17 @@ button.add-btn:hover {
   color: #38bdf8;
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
+
 .text-personal {
   color: #a855f7;
   text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
 }
+
 .text-fitness {
   color: #22c55e;
   text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
 }
+
 .text-urgent {
   color: #ef4444;
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
@@ -430,16 +433,19 @@ button.add-btn:hover {
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.2);
 }
+
 .tag-personal {
   background: rgba(168, 85, 247, 0.1);
   color: #a855f7;
   border: 1px solid rgba(168, 85, 247, 0.2);
 }
+
 .tag-fitness {
   background: rgba(34, 197, 94, 0.1);
   color: #22c55e;
   border: 1px solid rgba(34, 197, 94, 0.2);
 }
+
 .tag-urgent {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
@@ -451,6 +457,7 @@ button.add-btn:hover {
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -462,6 +469,7 @@ button.add-btn:hover {
     opacity: 0;
     transform: translateY(40px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -472,6 +480,7 @@ button.add-btn:hover {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -505,6 +514,7 @@ button.add-btn:hover {
     opacity: 0;
     transform: scale(0.9) translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -668,6 +678,7 @@ button.add-btn:hover {
   0% {
     box-shadow: inset 0 0 50px rgba(129, 140, 248, 0.1);
   }
+
   100% {
     box-shadow: inset 0 0 150px rgba(129, 140, 248, 0.4);
   }
@@ -677,6 +688,7 @@ button.add-btn:hover {
   color: var(--text-main);
   font-weight: 400;
 }
+
 .command-palette-overlay {
   position: fixed;
   inset: 0;
@@ -707,6 +719,7 @@ button.add-btn:hover {
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -792,18 +805,28 @@ body {
   }
 
   .input-row {
-    flex-direction: column;
-    align-items: stretch !important;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
   }
 
+  /* Task text input takes full row */
+  .input-row > input[type='text'] {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  /* Range toggle and Add button stay inline, compact */
   .range-toggle {
-    width: 100%;
-    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
   }
 
   button.add-btn {
-    width: 100%;
+    flex: 0 0 auto;
+    padding: 0 1rem;
+    height: 42px;
+    font-size: 0.85rem;
   }
 
   .todo-item {
