@@ -35,7 +35,7 @@ export class AuraDatabase extends Dexie {
     this.version(2).stores({
       users: 'id, username',
       todos: 'id, userId, createdAt, completed',
-      stats: 'userId'
+      stats: 'userId',
     });
   }
 }
