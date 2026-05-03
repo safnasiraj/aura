@@ -46,7 +46,7 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
   return (
     <div className="app-container" style={{ maxWidth: '400px' }}>
       <header>
-        <h1>Aura Tasks</h1>
+        <h1>re-marking</h1>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
       </header>
 
@@ -216,7 +216,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
         >
           <LogOut size={24} />
         </button>
-        <h1>Aura Tasks</h1>
+        <h1>re-marking</h1>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
       </header>
 
