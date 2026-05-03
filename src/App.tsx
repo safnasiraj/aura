@@ -1316,7 +1316,7 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                 if (c < r) {
                   return (
                     <span
-                      title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}`}
+                      title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}`}
                       style={{
                         fontSize: '0.65rem',
                         padding: '0.1rem 0.5rem',
@@ -1335,7 +1335,7 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                 } else if (c > r) {
                   return (
                     <span
-                      title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}. You can do better!`}
+                      title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}. You can do better!`}
                       style={{
                         fontSize: '0.65rem',
                         padding: '0.1rem 0.5rem',
@@ -1645,9 +1645,18 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                           style={{ marginRight: '0.5rem' }}
                         />
                         <input
-                          value={reminderDate ? reminderDate.toLocaleDateString() : ''}
+                          value={
+                            reminderDate
+                              ? reminderDate.toLocaleDateString(undefined, {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })
+                              : ''
+                          }
                           readOnly
-                          placeholder={isRange ? 'Start Date' : 'Date (Optional)'}
+                          placeholder={isRange ? 'Start Date' : 'Add Date...'}
                           style={{
                             background: 'transparent',
                             border: 'none',
@@ -1693,7 +1702,16 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                             style={{ marginRight: '0.5rem' }}
                           />
                           <input
-                            value={endDate ? endDate.toLocaleDateString() : ''}
+                            value={
+                              endDate
+                                ? endDate.toLocaleDateString(undefined, {
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })
+                                : ''
+                            }
                             readOnly
                             placeholder="End Date"
                             style={{
@@ -1725,7 +1743,7 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                       }}
                       showTimeSelect
                       showTimeSelectOnly
-                      timeIntervals={15}
+                      timeIntervals={30}
                       timeCaption="Time"
                       dateFormat="h:mm aa"
                       className="custom-datepicker"
