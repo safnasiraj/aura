@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus } from 'lucide-react';
+import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus, BarChart2 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { db } from './db';
 import type { Todo } from './db';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
   const [isRegister, setIsRegister] = useState(false);
@@ -168,6 +169,99 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
   );
 };
 
+const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
+  const completed = todos.filter(t => t.completed);
+  
+  // Last 7 days activity
+  const last7Days = [...Array(7)].map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const count = completed.filter(t => new Date(t.completedAt!).toDateString() === d.toDateString()).length;
+    return { name: dateStr, count, date: d };
+  }).reverse();
+
+  // Completion Status
+  const statusData = [
+    { name: 'Early', value: completed.filter(t => {
+      if (!t.reminderAt || !t.completedAt) return false;
+      return new Date(t.completedAt) < new Date(t.reminderAt);
+    }).length, color: '#2dd4bf' },
+    { name: 'On Time', value: completed.filter(t => {
+      if (!t.reminderAt || !t.completedAt) return true;
+      const r = new Date(t.reminderAt);
+      const c = new Date(t.completedAt);
+      return c.toDateString() === r.toDateString();
+    }).length, color: '#818cf8' },
+    { name: 'Late', value: completed.filter(t => {
+      if (!t.reminderAt || !t.completedAt) return false;
+      return new Date(t.completedAt) > new Date(t.reminderAt) && new Date(t.completedAt).toDateString() !== new Date(t.reminderAt).toDateString();
+    }).length, color: '#fb923c' },
+  ].filter(d => d.value > 0);
+
+  return (
+    <div className="insights-view" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
+        <BarChart2 /> Visual Insights
+      </h2>
+
+      <div className="glass-panel" style={{ padding: '1.5rem', height: '300px' }}>
+        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Last 7 Days Activity</h3>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={last7Days}>
+            <defs>
+              <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis hide />
+            <Tooltip 
+              contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem' }}
+              itemStyle={{ color: 'var(--text-main)' }}
+            />
+            <Area type="monotone" dataKey="count" stroke="var(--primary)" fillOpacity={1} fill="url(#colorCount)" strokeWidth={3} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Total Tasks</h3>
+          <p style={{ fontSize: '2.5rem', fontWeight: '800', margin: 0 }}>{todos.length}</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{completed.length} Completed</p>
+        </div>
+        <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <ResponsiveContainer width="100%" height={100}>
+            <PieChart>
+              <Pie
+                data={statusData}
+                innerRadius={30}
+                outerRadius={40}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {statusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.7rem' }}>
+            {statusData.map(d => (
+              <span key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} /> {d.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => React.ReactNode }> = ({ todos, renderTask }) => {
   if (todos.length === 0) {
     return <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>No completed tasks yet.</p>;
@@ -212,7 +306,7 @@ const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Rea
   );
 };
 const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, onLogout }) => {
-  const [view, setView] = useState<'tasks' | 'history'>('tasks');
+  const [view, setView] = useState<'tasks' | 'history' | 'insights'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
   const [reminderDate, setReminderDate] = useState<Date | null>(null);
   const [confirmTask, setConfirmTask] = useState<string | null>(null);
@@ -688,40 +782,45 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
               )}
             </div>
           </>
-        ) : (
+        ) : view === 'history' ? (
           <div className="history-view">
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>
               <History /> Task History
             </h2>
             <TaskHistoryList todos={completedTodos} renderTask={renderTask} />
           </div>
+        ) : (
+          <InsightsView todos={todos} />
         )}
       </div>
-      
-      {view === 'tasks' && (
-        <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+        {view === 'tasks' ? (
+          <>
+            <button 
+              onClick={() => setView('history')}
+              className="load-more-btn"
+              style={{ flex: 1, marginTop: 0 }}
+            >
+              <History size={18} style={{ marginRight: '0.5rem' }} /> History
+            </button>
+            <button 
+              onClick={() => setView('insights')}
+              className="load-more-btn"
+              style={{ flex: 1, marginTop: 0, background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(251, 146, 60, 0.1))' }}
+            >
+              <BarChart2 size={18} style={{ marginRight: '0.5rem' }} /> Insights
+            </button>
+          </>
+        ) : (
           <button 
-            onClick={() => setView('history')}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--border)',
-              padding: '0.75rem 1.5rem', borderRadius: '2rem',
-              color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s',
-              fontFamily: 'inherit', fontSize: '0.9rem'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.color = 'var(--text-main)';
-              e.currentTarget.style.borderColor = 'var(--primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.color = 'var(--text-muted)';
-              e.currentTarget.style.borderColor = 'var(--border)';
-            }}
+            onClick={() => setView('tasks')}
+            className="load-more-btn"
+            style={{ width: 'auto', padding: '0.75rem 2rem', marginTop: 0 }}
           >
-            <History size={18} /> View Task History
+            <ArrowLeft size={18} style={{ marginRight: '0.5rem' }} /> Back to Tasks
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {confirmTask && (
         <div className="modal-overlay">
