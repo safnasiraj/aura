@@ -87,6 +87,50 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
   );
 };
 
+const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => React.ReactNode }> = ({ todos, renderTask }) => {
+  if (todos.length === 0) {
+    return <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>No completed tasks yet.</p>;
+  }
+
+  const grouped: Record<string, Todo[]> = {};
+
+  todos.forEach(todo => {
+    const d = new Date(todo.createdAt); 
+    const dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    
+    if (!grouped[dateStr]) grouped[dateStr] = [];
+    grouped[dateStr].push(todo);
+  });
+
+  return (
+    <div className="history-timeline">
+      {Object.keys(grouped).map(dateStr => (
+        <div key={dateStr} className="timeline-group" style={{ marginBottom: '1.5rem' }}>
+          <div className="timeline-header" style={{ 
+            color: 'var(--text-main)', 
+            fontWeight: '600', 
+            fontSize: '1rem', 
+            borderBottom: '1px solid rgba(255,255,255,0.1)', 
+            paddingBottom: '0.5rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>{dateStr}</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '1rem' }}>
+              {grouped[dateStr].length} {grouped[dateStr].length === 1 ? 'task' : 'tasks'}
+            </span>
+          </div>
+          <div className="timeline-tasks" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {grouped[dateStr].map(renderTask)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, onLogout }) => {
   const [view, setView] = useState<'tasks' | 'history'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
@@ -366,15 +410,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>
               <History /> Task History
             </h2>
-            <div className="todo-list">
-              {completedTodos.length === 0 ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem' }}>
-                  No completed tasks yet.
-                </p>
-              ) : (
-                completedTodos.map(renderTask)
-              )}
-            </div>
+            <TaskHistoryList todos={completedTodos} renderTask={renderTask} />
           </div>
         )}
       </div>
