@@ -1,13 +1,95 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle2, Circle, Flame, Target, Trash2 } from 'lucide-react';
+import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db';
 import type { Todo } from './db';
 
-const App: React.FC = () => {
+const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
+  const [isRegister, setIsRegister] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!username.trim() || !password.trim()) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      if (isRegister) {
+        // Check if user exists
+        const existing = await db.users.where('username').equals(username).first();
+        if (existing) {
+          setError('Username already exists');
+          return;
+        }
+        const id = crypto.randomUUID();
+        await db.users.add({ id, username, password });
+        onLogin(id);
+      } else {
+        const user = await db.users.where('username').equals(username).first();
+        if (!user || user.password !== password) {
+          setError('Invalid username or password');
+          return;
+        }
+        onLogin(user.id);
+      }
+    } catch (err) {
+      setError('An error occurred');
+    }
+  };
+
+  return (
+    <div className="app-container" style={{ maxWidth: '400px' }}>
+      <header>
+        <h1>Aura Tasks</h1>
+        <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
+      </header>
+
+      <div className="glass-panel">
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          {isRegister ? 'Create Account' : 'Welcome Back'}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="input-group">
+          {error && <p style={{ color: '#ef4444', textAlign: 'center', margin: 0 }}>{error}</p>}
+          <div className="input-row">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div className="input-row">
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="add-btn" style={{ width: '100%', marginTop: '0.5rem' }}>
+            {isRegister ? 'Register' : 'Login'}
+          </button>
+        </form>
+        
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem', cursor: 'pointer' }} onClick={() => setIsRegister(!isRegister)}>
+          {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, onLogout }) => {
   // Fetch real-time data from IndexedDB
-  const todos = useLiveQuery(() => db.todos.orderBy('createdAt').reverse().toArray()) || [];
-  const stats = useLiveQuery(() => db.stats.get(1)) || { id: 1, totalCompleted: 0, streak: 0, lastActiveDate: null };
+  const todos = useLiveQuery(() => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'), [userId]) || [];
+  const stats = useLiveQuery(() => db.stats.get(userId), [userId]) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
 
   const [newTaskText, setNewTaskText] = useState('');
   const [reminderTime, setReminderTime] = useState('');
@@ -67,6 +149,7 @@ const App: React.FC = () => {
 
     const newTodo: Todo = {
       id: crypto.randomUUID(),
+      userId,
       text: newTaskText,
       completed: false,
       reminderAt: reminderTime || null,
@@ -95,7 +178,7 @@ const App: React.FC = () => {
   };
 
   const updateStatsOnCompletion = async () => {
-    const currentStats = await db.stats.get(1) || { id: 1, totalCompleted: 0, streak: 0, lastActiveDate: null };
+    const currentStats = await db.stats.get(userId) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
     const todayStr = new Date().toDateString();
     let newStreak = currentStats.streak;
 
@@ -116,7 +199,7 @@ const App: React.FC = () => {
     }
 
     await db.stats.put({
-      id: 1,
+      userId,
       totalCompleted: currentStats.totalCompleted + 1,
       streak: newStreak,
       lastActiveDate: todayStr
@@ -125,7 +208,14 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      <header>
+      <header style={{ position: 'relative' }}>
+        <button 
+          onClick={onLogout} 
+          style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          title="Logout"
+        >
+          <LogOut size={24} />
+        </button>
         <h1>Aura Tasks</h1>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
       </header>
@@ -209,6 +299,28 @@ const App: React.FC = () => {
       </div>
     </div>
   );
+};
+
+const App: React.FC = () => {
+  const [currentUserId, setCurrentUserId] = useState<string | null>(() => {
+    return localStorage.getItem('aura_auth_id');
+  });
+
+  const handleLogin = (id: string) => {
+    localStorage.setItem('aura_auth_id', id);
+    setCurrentUserId(id);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('aura_auth_id');
+    setCurrentUserId(null);
+  };
+
+  if (!currentUserId) {
+    return <Auth onLogin={handleLogin} />;
+  }
+
+  return <TodoApp userId={currentUserId} onLogout={handleLogout} />;
 };
 
 export default App;

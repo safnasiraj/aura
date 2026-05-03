@@ -110,7 +110,7 @@ h1 {
   gap: 1rem;
 }
 
-input[type="text"], input[type="datetime-local"] {
+input[type="text"], input[type="password"], input[type="datetime-local"] {
   width: 100%;
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid var(--border);
