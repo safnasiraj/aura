@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History } from 'lucide-react';
+import { Bell, CheckCircle2, Circle, Flame, Target, Trash2, LogOut, Calendar, Clock, ArrowLeft, History, Plus } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -452,18 +452,18 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
       {view === 'tasks' && (
         <div className="stats-container">
           <div className="stat-item">
+            <div className="stat-label">Day Streak</div>
             <div className="stat-value">
-              <Flame color="var(--secondary)" />
+              <Flame size={28} color="var(--secondary)" fill="var(--secondary)" style={{ opacity: 0.8 }} />
               {stats.streak}
             </div>
-            <div className="stat-label">Day Streak</div>
           </div>
           <div className="stat-item">
+            <div className="stat-label">Total Done</div>
             <div className="stat-value">
-              <Target color="var(--success)" />
+              <Target size={28} color="var(--success)" style={{ opacity: 0.8 }} />
               {stats.totalCompleted}
             </div>
-            <div className="stat-label">Tasks Done</div>
           </div>
         </div>
       )}
@@ -485,20 +485,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                   onClick={() => setIsRange(!isRange)}
                   className={`range-toggle ${isRange ? 'active' : ''}`}
                   title="Add task for a range of dates"
-                  style={{ 
-                    background: isRange ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                    color: isRange ? 'white' : 'var(--text-muted)',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    padding: '0.5rem 0.8rem',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap'
-                  }}
                 >
-                  {isRange ? 'Range Mode ON' : 'Add Range'}
+                  <Calendar size={16} /> {isRange ? 'Range Mode' : 'Add Range'}
                 </button>
               </div>
               <div className="input-row" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
@@ -587,7 +575,9 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                     />
                   </div>
                 )}
-                <button type="submit" className="add-btn">Add</button>
+                <button type="submit" className="add-btn">
+                  <Plus size={20} strokeWidth={3} /> Add
+                </button>
               </div>
             </form>
 
