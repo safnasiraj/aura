@@ -184,6 +184,9 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const [view, setView] = useState<'tasks' | 'history'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
   const [reminderDate, setReminderDate] = useState<Date | null>(null);
+  const [confirmTask, setConfirmTask] = useState<string | null>(null);
+  const [lateConfirmTask, setLateConfirmTask] = useState<string | null>(null);
+  const [manualCompletionDate, setManualCompletionDate] = useState<Date>(new Date());
 
   const todos = useLiveQuery(() => db.todos.where('userId').equals(userId).reverse().sortBy('createdAt'), [userId]) || [];
   const stats = useLiveQuery(() => db.stats.get(userId), [userId]) || { userId, totalCompleted: 0, streak: 0, lastActiveDate: null };
@@ -248,7 +251,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
       text: newTaskText,
       completed: false,
       reminderAt: reminderDate ? reminderDate.toISOString() : null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      completedAt: null
     };
 
     await db.todos.add(newTodo);
@@ -268,14 +272,22 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
       reminderDay.setHours(0, 0, 0, 0);
 
       if (reminderDay > today) {
-        if (!window.confirm("This task is planned for a future date. Are you sure you want to mark it as done now?")) {
-          return;
-        }
+        setConfirmTask(id);
+        return;
+      }
+
+      if (reminderDay < today) {
+        setLateConfirmTask(id);
+        setManualCompletionDate(new Date());
+        return;
       }
     }
 
     const isCompleting = !todo.completed;
-    await db.todos.update(id, { completed: isCompleting });
+    await db.todos.update(id, { 
+      completed: isCompleting,
+      completedAt: isCompleting ? new Date().toISOString() : null
+    });
 
     if (isCompleting) {
       await updateStatsOnCompletion();
@@ -331,12 +343,50 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
           )}
         </button>
         <div className="todo-info">
-          <span className="todo-text">{todo.text}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span className="todo-text">{todo.text}</span>
+            {todo.completed && todo.reminderAt && todo.completedAt && (() => {
+              const r = new Date(todo.reminderAt);
+              const c = new Date(todo.completedAt);
+              r.setHours(0,0,0,0);
+              c.setHours(0,0,0,0);
+              
+              if (c < r) {
+                return (
+                  <span title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}`} style={{ 
+                    fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem', 
+                    background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e',
+                    border: '1px solid rgba(34, 197, 94, 0.2)', fontWeight: '600',
+                    textTransform: 'uppercase', letterSpacing: '0.02em'
+                  }}>
+                    ✨ Excellent! Early
+                  </span>
+                );
+              } else if (c > r) {
+                return (
+                  <span title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}. You can do better!`} style={{ 
+                    fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem', 
+                    background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                    border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '600',
+                    textTransform: 'uppercase', letterSpacing: '0.02em'
+                  }}>
+                    ⏳ Late - Aim Higher
+                  </span>
+                );
+              }
+              return null;
+            })()}
+          </div>
           {todo.reminderAt && !todo.completed && (
             <span className="todo-reminder">
               <Bell size={14} />
               {new Date(todo.reminderAt).toLocaleString()}
             </span>
+          )}
+          {todo.completed && todo.completedAt && (
+             <span className="todo-reminder" style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+               Done: {new Date(todo.completedAt).toLocaleString()}
+             </span>
           )}
         </div>
       </div>
@@ -505,6 +555,97 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
           >
             <History size={18} /> View Task History
           </button>
+        </div>
+      )}
+
+      {confirmTask && (
+        <div className="modal-overlay">
+          <div className="glass-panel modal-content">
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Bell size={20} color="var(--primary)" /> Future Task
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
+              This task is scheduled for a future date. Are you sure you want to complete it now?
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                className="add-btn" 
+                style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }}
+                onClick={() => setConfirmTask(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="add-btn" 
+                style={{ flex: 1 }}
+                onClick={async () => {
+                  const id = confirmTask;
+                  setConfirmTask(null);
+                  const todo = await db.todos.get(id);
+                  if (todo) {
+                    await db.todos.update(id, { 
+                      completed: true,
+                      completedAt: new Date().toISOString()
+                    });
+                    await updateStatsOnCompletion();
+                  }
+                }}
+              >
+                Yes, Finish it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {lateConfirmTask && (
+        <div className="modal-overlay">
+          <div className="glass-panel modal-content">
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Clock size={20} color="var(--primary)" /> When was it finished?
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              This task was planned for an earlier date. When did you actually finish it?
+            </p>
+            
+            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
+              <DatePicker
+                selected={manualCompletionDate}
+                onChange={(date: Date | null) => date && setManualCompletionDate(date)}
+                maxDate={new Date()}
+                dateFormat="MMM d, yyyy"
+                className="custom-datepicker"
+                inline
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button 
+                className="add-btn" 
+                style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }}
+                onClick={() => setLateConfirmTask(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="add-btn" 
+                style={{ flex: 1 }}
+                onClick={async () => {
+                  const id = lateConfirmTask;
+                  setLateConfirmTask(null);
+                  const todo = await db.todos.get(id);
+                  if (todo) {
+                    await db.todos.update(id, { 
+                      completed: true,
+                      completedAt: manualCompletionDate.toISOString()
+                    });
+                    await updateStatsOnCompletion();
+                  }
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

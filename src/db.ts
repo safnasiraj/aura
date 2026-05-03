@@ -14,6 +14,7 @@ export interface Todo {
   completed: boolean;
   reminderAt: string | null;
   createdAt: string;
+  completedAt: string | null;
 }
 
 export interface UserStats {
