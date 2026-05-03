@@ -266,6 +266,148 @@ const ActiveTaskList: React.FC<{ todos: Todo[]; renderTask: (todo: Todo) => Reac
   );
 };
 
+const AuraHeatmap: React.FC<{ data: { date: Date; count: number }[] }> = ({ data }) => {
+  const weeks = [];
+  for (let i = 0; i < data.length; i += 7) {
+    weeks.push(data.slice(i, i + 7));
+  }
+
+  const getIntensity = (count: number) => {
+    if (count === 0) return 'rgba(255,255,255,0.03)';
+    if (count <= 2) return 'color-mix(in srgb, var(--primary), transparent 70%)';
+    if (count <= 5) return 'color-mix(in srgb, var(--primary), transparent 40%)';
+    return 'var(--primary)';
+  };
+
+  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+
+  return (
+    <div className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+        Aura Focus Grid
+      </h3>
+
+      <div style={{ display: 'flex', gap: '8px', minWidth: 'max-content' }}>
+        {/* Day labels column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '20px' }}>
+          {dayLabels.map((label, i) => (
+            <div
+              key={i}
+              style={{
+                height: '12px',
+                fontSize: '9px',
+                color: 'var(--text-muted)',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+
+        {/* Heatmap Grid Area */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {/* Month labels row */}
+          <div style={{ display: 'flex', height: '16px', gap: '4px' }}>
+            {weeks.map((week, wi) => {
+              const firstDay = week[0].date;
+              // Only show month name if it's the first week of the month
+              // or if it's the very first week in the display
+              const isNewMonth = firstDay.getDate() <= 7 && wi > 0;
+              const monthName = firstDay.toLocaleDateString(undefined, { month: 'short' });
+              return (
+                <div
+                  key={wi}
+                  style={{
+                    width: '12px',
+                    fontSize: '9px',
+                    color: 'var(--text-muted)',
+                    position: 'relative',
+                  }}
+                >
+                  {(wi === 0 || isNewMonth) && (
+                    <span
+                      style={{ position: 'absolute', left: 0, bottom: 0, whiteSpace: 'nowrap' }}
+                    >
+                      {monthName}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Columns of days */}
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {weeks.map((week, wi) => (
+              <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {week.map((day, di) => (
+                  <div
+                    key={di}
+                    title={`${day.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}: ${day.count} tasks completed`}
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '2px',
+                      background: getIntensity(day.count),
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      cursor: 'help',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.25)';
+                      e.currentTarget.style.boxShadow = `0 0 10px ${getIntensity(day.count)}`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginTop: '1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: '0.5rem',
+          fontSize: '0.7rem',
+          color: 'var(--text-muted)',
+        }}
+      >
+        <span>Less</span>
+        <div
+          style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(255,255,255,0.03)' }}
+        />
+        <div
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 2,
+            background: 'color-mix(in srgb, var(--primary), transparent 70%)',
+          }}
+        />
+        <div
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 2,
+            background: 'color-mix(in srgb, var(--primary), transparent 40%)',
+          }}
+        />
+        <div style={{ width: 10, height: 10, borderRadius: 2, background: 'var(--primary)' }} />
+        <span>More Glow</span>
+      </div>
+    </div>
+  );
+};
+
 const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
   const completed = todos.filter((t) => t.completed);
 
@@ -281,6 +423,33 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
       return { name: dateStr, count, date: d };
     })
     .reverse();
+
+  const heatmapData = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const weeksToDisplay = 12;
+    const startDay = new Date(today);
+    startDay.setDate(today.getDate() - weeksToDisplay * 7);
+
+    // Align start to the beginning of the week (Sunday)
+    while (startDay.getDay() !== 0) {
+      startDay.setDate(startDay.getDate() - 1);
+    }
+
+    const data = [];
+    const current = new Date(startDay);
+    while (current <= today) {
+      const d = new Date(current);
+      const count = completed.filter((t) => {
+        if (!t.completedAt) return false;
+        return new Date(t.completedAt).toDateString() === d.toDateString();
+      }).length;
+      data.push({ date: d, count });
+      current.setDate(current.getDate() + 1);
+    }
+    return data;
+  }, [completed]);
 
   // Completion Status
   const statusData = [
@@ -323,6 +492,8 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
       <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
         <BarChart2 /> Visual Insights
       </h2>
+
+      <AuraHeatmap data={heatmapData} />
 
       <div className="glass-panel" style={{ padding: '1.5rem', height: '300px' }}>
         <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
@@ -1620,13 +1791,19 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
           </button>
         )}
         <div
+          onClick={() => setView('tasks')}
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '1rem',
             marginBottom: '0.5rem',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
           }}
+          className="logo-container"
+          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
           <img
             src="./logo.png"
