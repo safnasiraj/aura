@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, CheckCircle2, Circle, Flame, Target, Trash2 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, Todo, UserStats } from './db';
+import { db } from './db';
+import type { Todo } from './db';
 
 const App: React.FC = () => {
   // Fetch real-time data from IndexedDB
