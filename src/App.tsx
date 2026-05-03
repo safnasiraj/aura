@@ -729,13 +729,11 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
         </button>
         <div className="todo-info">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-            {todo.category && (
-              <span
-                className={`category-dot tag-${todo.category.toLowerCase()}`}
-                title={todo.category}
-              />
-            )}
-            <span className="todo-text">{todo.text}</span>
+            <span
+              className={`todo-text ${todo.category ? `text-${todo.category.toLowerCase()}` : ''}`}
+            >
+              {todo.text}
+            </span>
             {todo.completed &&
               todo.reminderAt &&
               todo.completedAt &&
