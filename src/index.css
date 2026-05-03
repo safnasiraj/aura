@@ -59,8 +59,9 @@ h1 {
   letter-spacing: -0.04em;
   background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #fb923c 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 0.25rem;
+  display: inline-block;
 }
 
 .stats-container {
@@ -148,7 +149,7 @@ input:focus {
 }
 
 button.add-btn {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #f97316 100%);
   border: none;
   border-radius: 0.75rem;
   color: white;
@@ -162,12 +163,34 @@ button.add-btn {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 20px var(--primary-glow);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+button.add-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+button.add-btn:hover::before {
+  left: 100%;
 }
 
 button.add-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 10px 30px var(--primary-glow);
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
 }
 
 .range-toggle {

@@ -522,10 +522,10 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             <ArrowLeft size={20} />
           </button>
         )}
-        <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
-          <img src="/logo.png" alt="Aura Logo" style={{ width: '48px', height: '48px', borderRadius: '50%', boxShadow: '0 0 15px var(--secondary-glow)' }} />
-          Aura
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+          <img src="./logo.png" alt="Aura Logo" style={{ width: '48px', height: '48px', borderRadius: '50%', boxShadow: '0 0 15px var(--secondary-glow)' }} />
+          <h1 style={{ margin: 0, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>Aura</h1>
+        </div>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
       </header>
 
