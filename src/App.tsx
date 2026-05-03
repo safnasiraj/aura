@@ -1977,36 +1977,22 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       {view === 'tasks' && (
         <div className="stats-container">
           <div className="stat-item" style={{ borderLeft: '4px solid var(--secondary)' }}>
-            <div className="stat-label">Aura Streak</div>
+            <div className="stat-label">Streak</div>
             <div className="stat-value">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Flame
-                  size={28}
-                  color="var(--secondary)"
-                  fill="var(--secondary)"
-                  style={{ filter: 'drop-shadow(0 0 8px var(--secondary-glow))' }}
-                />
-                <span
-                  title={`Rank: ${getAuraRank(stats.auraPoints || 0).title}`}
-                  style={{
-                    fontSize: '1rem',
-                    background: 'rgba(255,255,255,0.05)',
-                    padding: '0.2rem 0.4rem',
-                    borderRadius: '0.5rem',
-                    border: `1px solid ${getAuraRank(stats.auraPoints || 0).color}44`,
-                  }}
-                >
-                  {getAuraRank(stats.auraPoints || 0).icon}
-                </span>
-              </div>
+              <Flame
+                size={20}
+                color="var(--secondary)"
+                fill="var(--secondary)"
+                style={{ filter: 'drop-shadow(0 0 8px var(--secondary-glow))' }}
+              />
               {stats.streak}
             </div>
           </div>
           <div className="stat-item" style={{ borderLeft: '4px solid var(--primary)' }}>
-            <div className="stat-label">Aura Farmed</div>
+            <div className="stat-label">Farmed</div>
             <div className="stat-value">
               <Sparkles
-                size={28}
+                size={20}
                 color="var(--primary)"
                 style={{ filter: 'drop-shadow(0 0 8px var(--primary-glow))' }}
               />
@@ -2017,12 +2003,15 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
             className="stat-item"
             style={{ borderLeft: `4px solid ${getAuraRank(stats.auraPoints || 0).color}` }}
           >
-            <div className="stat-label">Aura Rank</div>
-            <div className="stat-value" style={{ fontSize: '1.2rem', fontWeight: '700' }}>
-              <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>
-                {getAuraRank(stats.auraPoints || 0).icon}
+            <div className="stat-label">Rank</div>
+            <div className="stat-value" style={{ fontSize: '1.1rem', fontWeight: '700' }}>
+              <span style={{ fontSize: '1.2rem' }}>{getAuraRank(stats.auraPoints || 0).icon}</span>
+              <span
+                title={getAuraRank(stats.auraPoints || 0).title}
+                style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {getAuraRank(stats.auraPoints || 0).title}
               </span>
-              {getAuraRank(stats.auraPoints || 0).title}
             </div>
           </div>
         </div>
