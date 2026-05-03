@@ -16,11 +16,13 @@ export interface Todo {
   createdAt: string;
   completedAt: string | null;
   category?: 'Work' | 'Personal' | 'Fitness' | 'Urgent';
+  subtasks?: { id: string; text: string; completed: boolean }[];
 }
 
 export interface UserStats {
   userId: string; // One row per user
   totalCompleted: number;
+  auraPoints: number;
   streak: number;
   lastActiveDate: string | null;
 }

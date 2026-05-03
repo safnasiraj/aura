@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Circle,
   Flame,
-  Target,
   Trash2,
   LogOut,
   Calendar,
@@ -13,6 +12,7 @@ import {
   History,
   Plus,
   BarChart2,
+  Sparkles,
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
@@ -500,6 +500,7 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
       liveStats || {
         userId,
         totalCompleted: 0,
+        auraPoints: 0,
         streak: 0,
         lastActiveDate: null,
       },
@@ -662,18 +663,209 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
     });
 
     if (isCompleting) {
-      await updateStatsOnCompletion();
+      const points = calculateAuraPoints(todo, new Date());
+      await updateStatsOnCompletion(points);
     }
+  };
+
+  const calculateAuraPoints = (todo: Todo, completionDate: Date) => {
+    let points = 100;
+    if (todo.reminderAt) {
+      const planned = new Date(todo.reminderAt);
+      planned.setHours(0, 0, 0, 0);
+      const actual = new Date(completionDate);
+      actual.setHours(0, 0, 0, 0);
+
+      const diffTime = actual.getTime() - planned.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        // Early
+        points += Math.abs(diffDays) * 50;
+      } else if (diffDays > 0) {
+        // Late
+        points = Math.max(10, points - diffDays * 20);
+      }
+    }
+    return points;
   };
 
   const deleteTodo = async (id: string) => {
     await db.todos.delete(id);
   };
+  const generateSubtasks = async (id: string) => {
+    const todo = await db.todos.get(id);
+    if (!todo) return;
+    const text = todo.text.toLowerCase();
+    let suggestions: string[];
+    if (
+      text.includes('trip') ||
+      text.includes('travel') ||
+      text.includes('vacation') ||
+      text.includes('flight') ||
+      text.includes('hotel')
+    ) {
+      suggestions = ['Book transport & stay', 'Pack essentials & docs', 'Finalize itinerary'];
+    } else if (
+      text.includes('meeting') ||
+      text.includes('call') ||
+      text.includes('presentation') ||
+      text.includes('zoom') ||
+      text.includes('interview')
+    ) {
+      suggestions = ['Draft agenda & goals', 'Gather research/assets', 'Set follow-up tasks'];
+    } else if (
+      text.includes('study') ||
+      text.includes('exam') ||
+      text.includes('learn') ||
+      text.includes('course') ||
+      text.includes('homework')
+    ) {
+      suggestions = ['Read focus chapters', 'Create summary notes', 'Take practice test'];
+    } else if (
+      text.includes('gym') ||
+      text.includes('workout') ||
+      text.includes('fitness') ||
+      text.includes('run') ||
+      text.includes('training')
+    ) {
+      suggestions = ['Dynamic warm-up', 'Execute main routine', 'Cool down & stretch'];
+    } else if (
+      text.includes('project') ||
+      text.includes('work') ||
+      text.includes('report') ||
+      text.includes('task') ||
+      text.includes('assignment')
+    ) {
+      suggestions = ['Break into milestones', 'Draft first version', 'Proofread & submit'];
+    } else if (
+      text.includes('clean') ||
+      text.includes('home') ||
+      text.includes('house') ||
+      text.includes('laundry') ||
+      text.includes('room')
+    ) {
+      suggestions = ['Gather all supplies', 'Focus deep-clean area', 'Tidy & organize'];
+    } else if (
+      text.includes('cook') ||
+      text.includes('dinner') ||
+      text.includes('meal') ||
+      text.includes('recipe') ||
+      text.includes('lunch')
+    ) {
+      suggestions = ['Shop for ingredients', 'Prep & chop items', 'Cook & serve'];
+    } else if (
+      text.includes('code') ||
+      text.includes('build') ||
+      text.includes('app') ||
+      text.includes('dev') ||
+      text.includes('software')
+    ) {
+      suggestions = ['Plan architecture', 'Write core logic', 'Test & fix bugs'];
+    } else if (
+      text.includes('buy') ||
+      text.includes('shop') ||
+      text.includes('grocery') ||
+      text.includes('order') ||
+      text.includes('market')
+    ) {
+      suggestions = ['Make precise list', 'Compare prices/stores', 'Pick up & store'];
+    } else if (
+      text.includes('bill') ||
+      text.includes('pay') ||
+      text.includes('bank') ||
+      text.includes('finance') ||
+      text.includes('tax')
+    ) {
+      suggestions = ['Verify amount due', 'Execute payment', 'Record in tracker'];
+    } else if (
+      text.includes('birthday') ||
+      text.includes('party') ||
+      text.includes('gift') ||
+      text.includes('event') ||
+      text.includes('wedding')
+    ) {
+      suggestions = ['Send invitations', 'Arrange logistics', 'Prepare surprise/gift'];
+    } else if (
+      text.includes('doctor') ||
+      text.includes('health') ||
+      text.includes('medical') ||
+      text.includes('dentist') ||
+      text.includes('appointment')
+    ) {
+      suggestions = ['Gather symptoms/info', 'Attend appointment', 'Update health logs'];
+    } else if (
+      text.includes('car') ||
+      text.includes('service') ||
+      text.includes('oil') ||
+      text.includes('tire') ||
+      text.includes('drive')
+    ) {
+      suggestions = ['Check maintenance list', 'Book service/shop', 'Verify repairs done'];
+    } else if (
+      text.includes('pet') ||
+      text.includes('dog') ||
+      text.includes('cat') ||
+      text.includes('vet') ||
+      text.includes('feed')
+    ) {
+      suggestions = ['Check supply levels', 'Engage/Care for pet', 'Tidy pet area'];
+    } else if (
+      text.includes('garden') ||
+      text.includes('plant') ||
+      text.includes('water') ||
+      text.includes('mow') ||
+      text.includes('yard')
+    ) {
+      suggestions = ['Prune & weed area', 'Water & fertilize', 'Cleanup tools'];
+    } else if (
+      text.includes('read') ||
+      text.includes('book') ||
+      text.includes('article') ||
+      text.includes('novel') ||
+      text.includes('chapter')
+    ) {
+      suggestions = ['Find quiet space', 'Read focus section', 'Reflect/Take notes'];
+    } else if (
+      text.includes('yoga') ||
+      text.includes('meditate') ||
+      text.includes('breath') ||
+      text.includes('relax') ||
+      text.includes('peace')
+    ) {
+      suggestions = ['Prepare mat/space', 'Set focus intention', 'Post-practice rest'];
+    } else if (
+      text.includes('post') ||
+      text.includes('video') ||
+      text.includes('photo') ||
+      text.includes('content') ||
+      text.includes('social')
+    ) {
+      suggestions = ['Capture/Design media', 'Draft caption/tags', 'Publish & engage'];
+    } else {
+      suggestions = ['Define specific goal', 'Take the first step', 'Review progress'];
+    }
+    const subtasks = suggestions.map((s) => ({
+      id: crypto.randomUUID(),
+      text: s,
+      completed: false,
+    }));
+    await db.todos.update(id, { subtasks });
+  };
+  const toggleSubtask = async (todoId: string, subtaskId: string) => {
+    const todo = await db.todos.get(todoId);
+    if (!todo || !todo.subtasks) return;
+    const newSubtasks = todo.subtasks.map((s) =>
+      s.id === subtaskId ? { ...s, completed: !s.completed } : s
+    );
+    await db.todos.update(todoId, { subtasks: newSubtasks });
+  };
 
-  const updateStatsOnCompletion = async () => {
+  const updateStatsOnCompletion = async (points: number = 100) => {
     const currentStats = (await db.stats.get(userId)) || {
       userId,
       totalCompleted: 0,
+      auraPoints: 0,
       streak: 0,
       lastActiveDate: null,
     };
@@ -699,6 +891,7 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
     await db.stats.put({
       userId,
       totalCompleted: currentStats.totalCompleted + 1,
+      auraPoints: (currentStats.auraPoints || 0) + points,
       streak: newStreak,
       lastActiveDate: todayStr,
     });
@@ -734,6 +927,15 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
             >
               {todo.text}
             </span>
+            {!todo.subtasks && !todo.completed && (
+              <button
+                onClick={() => generateSubtasks(todo.id)}
+                className="magic-btn"
+                title="AI Smart Breakdown"
+              >
+                <Sparkles size={14} /> Breakdown
+              </button>
+            )}
             {todo.completed &&
               todo.reminderAt &&
               todo.completedAt &&
@@ -785,6 +987,22 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                 return null;
               })()}
           </div>
+          {todo.subtasks && todo.subtasks.length > 0 && (
+            <div className="subtask-list">
+              {todo.subtasks.map((st) => (
+                <div key={st.id} className={`subtask-item ${st.completed ? 'completed' : ''}`}>
+                  <button onClick={() => toggleSubtask(todo.id, st.id)} className="subtask-check">
+                    {st.completed ? (
+                      <CheckCircle2 size={12} color="var(--primary)" />
+                    ) : (
+                      <Circle size={12} color="var(--text-muted)" />
+                    )}
+                  </button>
+                  <span className="subtask-text">{st.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
           {todo.reminderAt && !todo.completed && (
             <span className="todo-reminder">
               <Bell size={14} />
@@ -883,23 +1101,27 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
 
       {view === 'tasks' && (
         <div className="stats-container">
-          <div className="stat-item">
-            <div className="stat-label">Day Streak</div>
+          <div className="stat-item" style={{ borderLeft: '4px solid var(--secondary)' }}>
+            <div className="stat-label">Aura Streak</div>
             <div className="stat-value">
               <Flame
                 size={28}
                 color="var(--secondary)"
                 fill="var(--secondary)"
-                style={{ opacity: 0.8 }}
+                style={{ filter: 'drop-shadow(0 0 8px var(--secondary-glow))' }}
               />
               {stats.streak}
             </div>
           </div>
-          <div className="stat-item">
-            <div className="stat-label">Total Done</div>
+          <div className="stat-item" style={{ borderLeft: '4px solid var(--primary)' }}>
+            <div className="stat-label">Aura Farmed</div>
             <div className="stat-value">
-              <Target size={28} color="var(--success)" style={{ opacity: 0.8 }} />
-              {stats.totalCompleted}
+              <Sparkles
+                size={28}
+                color="var(--primary)"
+                style={{ filter: 'drop-shadow(0 0 8px var(--primary-glow))' }}
+              />
+              {(stats.auraPoints || 0).toLocaleString()}
             </div>
           </div>
         </div>
@@ -1258,7 +1480,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                       completed: true,
                       completedAt: new Date().toISOString(),
                     });
-                    await updateStatsOnCompletion();
+                    const points = calculateAuraPoints(todo, new Date());
+                    await updateStatsOnCompletion(points);
                   }
                 }}
               >
@@ -1311,7 +1534,8 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
                       completed: true,
                       completedAt: manualCompletionDate.toISOString(),
                     });
-                    await updateStatsOnCompletion();
+                    const points = calculateAuraPoints(todo, manualCompletionDate);
+                    await updateStatsOnCompletion(points);
                   }
                 }}
               >
