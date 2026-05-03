@@ -254,14 +254,19 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
 
   const renderTask = (todo: Todo) => (
     <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
-      <div className="todo-content" onClick={() => toggleTodo(todo.id)}>
-        <div className="todo-checkbox">
+      <div className="todo-content">
+        <button 
+          className="todo-checkbox" 
+          onClick={() => toggleTodo(todo.id)}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          title={todo.completed ? "Mark as pending" : "Mark as done"}
+        >
           {todo.completed ? (
             <CheckCircle2 size={24} color="var(--primary)" />
           ) : (
             <Circle size={24} color="var(--text-muted)" />
           )}
-        </div>
+        </button>
         <div className="todo-info">
           <span className="todo-text">{todo.text}</span>
           {todo.reminderAt && !todo.completed && (
