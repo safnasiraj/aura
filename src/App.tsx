@@ -59,7 +59,7 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
         <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           {isRegister ? 'Create Account' : 'Welcome Back'}
         </h2>
-        
+
         <form onSubmit={handleSubmit} className="input-group">
           {error && <p style={{ color: '#ef4444', textAlign: 'center', margin: 0 }}>{error}</p>}
           <div className="input-row">
@@ -82,7 +82,7 @@ const Auth: React.FC<{ onLogin: (userId: string) => void }> = ({ onLogin }) => {
             {isRegister ? 'Register' : 'Login'}
           </button>
         </form>
-        
+
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '1rem', cursor: 'pointer' }} onClick={() => setIsRegister(!isRegister)}>
           {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
         </p>
@@ -101,10 +101,10 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
   todos.forEach(todo => {
     let dateStr = "No Date";
     if (todo.reminderAt) {
-      const d = new Date(todo.reminderAt); 
+      const d = new Date(todo.reminderAt);
       dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
     }
-    
+
     if (!grouped[dateStr]) grouped[dateStr] = [];
     grouped[dateStr].push(todo);
   });
@@ -112,14 +112,14 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
   const sortedKeys = Object.keys(grouped).sort((a, b) => {
     const now = new Date();
     const todayStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-    
+
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-    
+
     if (a === "No Date") return -1;
     if (b === "No Date") return 1;
-    
+
     if (a === todayStr) return -1;
     if (b === todayStr) return 1;
 
@@ -137,18 +137,18 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
     if (isPastA && !isPastB) return -1; // Past comes before Future (day after tomorrow)
     if (!isPastA && isPastB) return 1;
 
-    return timeA - timeB; 
+    return timeA - timeB;
   });
 
   return (
     <div className="history-timeline">
       {sortedKeys.map(dateStr => (
         <div key={dateStr} className="timeline-group" style={{ marginBottom: '1.5rem' }}>
-          <div className="timeline-header" style={{ 
-            color: 'var(--text-main)', 
-            fontWeight: '600', 
-            fontSize: '1rem', 
-            borderBottom: '1px solid rgba(255,255,255,0.1)', 
+          <div className="timeline-header" style={{
+            color: 'var(--text-main)',
+            fontWeight: '600',
+            fontSize: '1rem',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
             paddingBottom: '0.5rem',
             marginBottom: '1rem',
             display: 'flex',
@@ -171,7 +171,7 @@ const ActiveTaskList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Reac
 
 const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
   const completed = todos.filter(t => t.completed);
-  
+
   // Last 7 days activity
   const last7Days = [...Array(7)].map((_, i) => {
     const d = new Date();
@@ -183,20 +183,26 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
 
   // Completion Status
   const statusData = [
-    { name: 'Early', value: completed.filter(t => {
-      if (!t.reminderAt || !t.completedAt) return false;
-      return new Date(t.completedAt) < new Date(t.reminderAt);
-    }).length, color: '#2dd4bf' },
-    { name: 'On Time', value: completed.filter(t => {
-      if (!t.reminderAt || !t.completedAt) return true;
-      const r = new Date(t.reminderAt);
-      const c = new Date(t.completedAt);
-      return c.toDateString() === r.toDateString();
-    }).length, color: '#818cf8' },
-    { name: 'Late', value: completed.filter(t => {
-      if (!t.reminderAt || !t.completedAt) return false;
-      return new Date(t.completedAt) > new Date(t.reminderAt) && new Date(t.completedAt).toDateString() !== new Date(t.reminderAt).toDateString();
-    }).length, color: '#fb923c' },
+    {
+      name: 'Early', value: completed.filter(t => {
+        if (!t.reminderAt || !t.completedAt) return false;
+        return new Date(t.completedAt) < new Date(t.reminderAt);
+      }).length, color: '#2dd4bf'
+    },
+    {
+      name: 'On Time', value: completed.filter(t => {
+        if (!t.reminderAt || !t.completedAt) return true;
+        const r = new Date(t.reminderAt);
+        const c = new Date(t.completedAt);
+        return c.toDateString() === r.toDateString();
+      }).length, color: '#818cf8'
+    },
+    {
+      name: 'Late', value: completed.filter(t => {
+        if (!t.reminderAt || !t.completedAt) return false;
+        return new Date(t.completedAt) > new Date(t.reminderAt) && new Date(t.completedAt).toDateString() !== new Date(t.reminderAt).toDateString();
+      }).length, color: '#fb923c'
+    },
   ].filter(d => d.value > 0);
 
   return (
@@ -211,13 +217,13 @@ const InsightsView: React.FC<{ todos: Todo[] }> = ({ todos }) => {
           <AreaChart data={last7Days}>
             <defs>
               <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
             <YAxis hide />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem' }}
               itemStyle={{ color: 'var(--text-main)' }}
             />
@@ -270,9 +276,9 @@ const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Rea
   const grouped: Record<string, Todo[]> = {};
 
   todos.forEach(todo => {
-    const d = new Date(todo.createdAt); 
+    const d = new Date(todo.createdAt);
     const dateStr = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-    
+
     if (!grouped[dateStr]) grouped[dateStr] = [];
     grouped[dateStr].push(todo);
   });
@@ -281,11 +287,11 @@ const TaskHistoryList: React.FC<{ todos: Todo[], renderTask: (todo: Todo) => Rea
     <div className="history-timeline">
       {Object.keys(grouped).map(dateStr => (
         <div key={dateStr} className="timeline-group" style={{ marginBottom: '1.5rem' }}>
-          <div className="timeline-header" style={{ 
-            color: 'var(--text-main)', 
-            fontWeight: '600', 
-            fontSize: '1rem', 
-            borderBottom: '1px solid rgba(255,255,255,0.1)', 
+          <div className="timeline-header" style={{
+            color: 'var(--text-main)',
+            fontWeight: '600',
+            fontSize: '1rem',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
             paddingBottom: '0.5rem',
             marginBottom: '1rem',
             display: 'flex',
@@ -324,34 +330,34 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const activeTodos = [...todos.filter(t => !t.completed)]
     .filter(t => filterCategory === 'All' || t.category === filterCategory)
     .sort((a, b) => {
-    const now = new Date();
-    const todayStr = now.toDateString();
-    
-    const getPriority = (todo: any) => {
-      if (!todo.reminderAt) return 1; // No date
-      
-      const todoDate = new Date(todo.reminderAt);
-      const todoDateStr = todoDate.toDateString();
-      
-      if (todoDateStr === todayStr) return 2; // Today
-      
-      // If not today, check if it's past or future
-      if (todoDate < now) return 3; // Yet to close (Past)
-      return 4; // Future
-    };
+      const now = new Date();
+      const todayStr = now.toDateString();
 
-    const pA = getPriority(a);
-    const pB = getPriority(b);
+      const getPriority = (todo: any) => {
+        if (!todo.reminderAt) return 1; // No date
 
-    if (pA !== pB) return pA - pB;
-    
-    // Within the same group, sort by time/date
-    if (a.reminderAt && b.reminderAt) {
-      return new Date(a.reminderAt).getTime() - new Date(b.reminderAt).getTime();
-    }
-    // For no-date tasks, sort by creation time (newest first)
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+        const todoDate = new Date(todo.reminderAt);
+        const todoDateStr = todoDate.toDateString();
+
+        if (todoDateStr === todayStr) return 2; // Today
+
+        // If not today, check if it's past or future
+        if (todoDate < now) return 3; // Yet to close (Past)
+        return 4; // Future
+      };
+
+      const pA = getPriority(a);
+      const pB = getPriority(b);
+
+      if (pA !== pB) return pA - pB;
+
+      // Within the same group, sort by time/date
+      if (a.reminderAt && b.reminderAt) {
+        return new Date(a.reminderAt).getTime() - new Date(b.reminderAt).getTime();
+      }
+      // For no-date tasks, sort by creation time (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   const completedTodos = todos.filter(t => t.completed);
 
   // Check streaks and reset if missed a day
@@ -409,7 +415,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
       const start = new Date(reminderDate);
       const end = new Date(endDate);
       const tasks = [];
-      
+
       let current = new Date(start);
       while (current <= end) {
         tasks.push({
@@ -424,7 +430,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
         });
         current.setDate(current.getDate() + 1);
       }
-      
+
       await db.todos.bulkAdd(tasks);
     } else {
       const newTodo: Todo = {
@@ -471,7 +477,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
     }
 
     const isCompleting = !todo.completed;
-    await db.todos.update(id, { 
+    await db.todos.update(id, {
       completed: isCompleting,
       completedAt: isCompleting ? new Date().toISOString() : null
     });
@@ -517,8 +523,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   const renderTask = (todo: Todo) => (
     <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
       <div className="todo-content">
-        <button 
-          className="todo-checkbox" 
+        <button
+          className="todo-checkbox"
           onClick={() => toggleTodo(todo.id)}
           style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           title={todo.completed ? "Mark as pending" : "Mark as done"}
@@ -532,8 +538,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
         <div className="todo-info">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             {todo.category && (
-              <span 
-                className={`category-dot tag-${todo.category.toLowerCase()}`} 
+              <span
+                className={`category-dot tag-${todo.category.toLowerCase()}`}
                 title={todo.category}
               />
             )}
@@ -541,13 +547,13 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             {todo.completed && todo.reminderAt && todo.completedAt && (() => {
               const r = new Date(todo.reminderAt);
               const c = new Date(todo.completedAt);
-              r.setHours(0,0,0,0);
-              c.setHours(0,0,0,0);
-              
+              r.setHours(0, 0, 0, 0);
+              c.setHours(0, 0, 0, 0);
+
               if (c < r) {
                 return (
-                  <span title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}`} style={{ 
-                    fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem', 
+                  <span title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}`} style={{
+                    fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem',
                     background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e',
                     border: '1px solid rgba(34, 197, 94, 0.2)', fontWeight: '600',
                     textTransform: 'uppercase', letterSpacing: '0.02em'
@@ -557,8 +563,8 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                 );
               } else if (c > r) {
                 return (
-                  <span title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}. You can do better!`} style={{ 
-                    fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem', 
+                  <span title={`Planned for ${new Date(todo.reminderAt).toLocaleDateString()}. You can do better!`} style={{
+                    fontSize: '0.65rem', padding: '0.1rem 0.5rem', borderRadius: '1rem',
                     background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
                     border: '1px solid rgba(239, 68, 68, 0.2)', fontWeight: '600',
                     textTransform: 'uppercase', letterSpacing: '0.02em'
@@ -577,9 +583,9 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             </span>
           )}
           {todo.completed && todo.completedAt && (
-             <span className="todo-reminder" style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-               Done: {new Date(todo.completedAt).toLocaleString()}
-             </span>
+            <span className="todo-reminder" style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              Done: {new Date(todo.completedAt).toLocaleString()}
+            </span>
           )}
         </div>
       </div>
@@ -596,15 +602,15 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
   return (
     <div className="app-container">
       <header style={{ position: 'relative', paddingBottom: '1rem' }}>
-        <button 
-          onClick={onLogout} 
-          style={{ 
-            position: 'absolute', 
-            right: 0, 
-            top: 0, 
-            background: 'rgba(255,255,255,0.05)', 
-            border: '1px solid var(--border)', 
-            color: 'var(--text-muted)', 
+        <button
+          onClick={onLogout}
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
             padding: '0.5rem',
             borderRadius: '0.75rem',
@@ -617,15 +623,15 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
           <LogOut size={20} />
         </button>
         {view === 'history' && (
-          <button 
-            onClick={() => setView('tasks')} 
-            style={{ 
-              position: 'absolute', 
-              left: 0, 
-              top: 0, 
-              background: 'rgba(255,255,255,0.05)', 
-              border: '1px solid var(--border)', 
-              color: 'var(--text-muted)', 
+          <button
+            onClick={() => setView('tasks')}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: '0.5rem',
               borderRadius: '0.75rem',
@@ -688,7 +694,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                   onChange={(e) => setNewTaskText(e.target.value)}
                   required
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsRange(!isRange)}
                   className={`range-toggle ${isRange ? 'active' : ''}`}
@@ -712,11 +718,11 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                     customInput={
                       <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.8rem 1rem', cursor: 'pointer' }}>
                         <Calendar size={18} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
-                        <input 
+                        <input
                           value={reminderDate ? reminderDate.toLocaleDateString() : ''}
                           readOnly
-                          placeholder={isRange ? "Start Date" : "Date (Optional)"} 
-                          style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }} 
+                          placeholder={isRange ? "Start Date" : "Date (Optional)"}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }}
                         />
                       </div>
                     }
@@ -739,11 +745,11 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                       customInput={
                         <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.8rem 1rem', cursor: 'pointer' }}>
                           <Calendar size={18} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
-                          <input 
+                          <input
                             value={endDate ? endDate.toLocaleDateString() : ''}
                             readOnly
-                            placeholder="End Date" 
-                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }} 
+                            placeholder="End Date"
+                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }}
                           />
                         </div>
                       }
@@ -772,11 +778,11 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                       customInput={
                         <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.5)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.8rem 1rem', cursor: 'pointer' }}>
                           <Clock size={18} color="var(--text-muted)" style={{ marginRight: '0.5rem' }} />
-                          <input 
+                          <input
                             value={reminderDate ? reminderDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                             readOnly
-                            placeholder="Time" 
-                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }} 
+                            placeholder="Time"
+                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', outline: 'none', width: '100%', cursor: 'pointer' }}
                           />
                         </div>
                       }
@@ -792,7 +798,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             <div className="todo-list">
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginRight: '0.25rem' }}>Filter:</span>
-                <button 
+                <button
                   onClick={() => setFilterCategory('All')}
                   className={`filter-chip ${filterCategory === 'All' ? 'active' : ''}`}
                 >
@@ -816,7 +822,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
                 <>
                   <ActiveTaskList todos={activeTodos.slice(0, visibleCount)} renderTask={renderTask} />
                   {activeTodos.length > visibleCount && (
-                    <button 
+                    <button
                       onClick={() => setVisibleCount(prev => prev + 10)}
                       className="load-more-btn"
                     >
@@ -841,14 +847,14 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
       <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
         {view === 'tasks' ? (
           <>
-            <button 
+            <button
               onClick={() => setView('history')}
               className="load-more-btn"
               style={{ flex: 1, marginTop: 0 }}
             >
               <History size={18} style={{ marginRight: '0.5rem' }} /> History
             </button>
-            <button 
+            <button
               onClick={() => setView('insights')}
               className="load-more-btn"
               style={{ flex: 1, marginTop: 0, background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(251, 146, 60, 0.1))' }}
@@ -857,7 +863,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             </button>
           </>
         ) : (
-          <button 
+          <button
             onClick={() => setView('tasks')}
             className="load-more-btn"
             style={{ width: 'auto', padding: '0.75rem 2rem', marginTop: 0 }}
@@ -877,22 +883,22 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
               This task is scheduled for a future date. Are you sure you want to complete it now?
             </p>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                className="add-btn" 
+              <button
+                className="add-btn"
                 style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }}
                 onClick={() => setConfirmTask(null)}
               >
                 Cancel
               </button>
-              <button 
-                className="add-btn" 
+              <button
+                className="add-btn"
                 style={{ flex: 1 }}
                 onClick={async () => {
                   const id = confirmTask;
                   setConfirmTask(null);
                   const todo = await db.todos.get(id);
                   if (todo) {
-                    await db.todos.update(id, { 
+                    await db.todos.update(id, {
                       completed: true,
                       completedAt: new Date().toISOString()
                     });
@@ -915,7 +921,7 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
               This task was planned for an earlier date. When did you actually finish it?
             </p>
-            
+
             <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
               <DatePicker
                 selected={manualCompletionDate}
@@ -928,22 +934,22 @@ const TodoApp: React.FC<{ userId: string, onLogout: () => void }> = ({ userId, o
             </div>
 
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                className="add-btn" 
+              <button
+                className="add-btn"
                 style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }}
                 onClick={() => setLateConfirmTask(null)}
               >
                 Cancel
               </button>
-              <button 
-                className="add-btn" 
+              <button
+                className="add-btn"
                 style={{ flex: 1 }}
                 onClick={async () => {
                   const id = lateConfirmTask;
                   setLateConfirmTask(null);
                   const todo = await db.todos.get(id);
                   if (todo) {
-                    await db.todos.update(id, { 
+                    await db.todos.update(id, {
                       completed: true,
                       completedAt: manualCompletionDate.toISOString()
                     });
