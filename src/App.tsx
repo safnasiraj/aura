@@ -16,6 +16,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Search,
 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import DatePicker from 'react-datepicker';
@@ -707,9 +708,134 @@ const getAuraRank = (points: number) => {
   return { title: 'Neon Novice', color: '#6366f1', secondary: '#fb923c', icon: '🌑' };
 };
 
+const CommandPalette: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onAction: (id: string) => void;
+}> = ({ isOpen, onClose, onAction }) => {
+  const [search, setSearch] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      inputRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const actions = [
+    { id: 'tasks', label: 'Go to Tasks', icon: <CheckCircle2 size={18} />, category: 'Navigation' },
+    { id: 'history', label: 'Go to History', icon: <History size={18} />, category: 'Navigation' },
+    {
+      id: 'insights',
+      label: 'Go to Insights',
+      icon: <BarChart2 size={18} />,
+      category: 'Navigation',
+    },
+    { id: 'zen', label: 'Go to Zen Mode', icon: <Sparkles size={18} />, category: 'Navigation' },
+    { id: 'new-task', label: 'Add New Task', icon: <Plus size={18} />, category: 'Quick Action' },
+    {
+      id: 'clear-completed',
+      label: 'Clear Completed Tasks',
+      icon: <Trash2 size={18} />,
+      category: 'Quick Action',
+    },
+  ].filter((a) => a.label.toLowerCase().includes(search.toLowerCase()));
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev + 1) % actions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev - 1 + actions.length) % actions.length);
+    } else if (e.key === 'Enter') {
+      if (actions[activeIndex]) {
+        onAction(actions[activeIndex].id);
+        onClose();
+      }
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="command-palette-overlay" onClick={onClose}>
+      <div className="command-palette" onClick={(e) => e.stopPropagation()}>
+        <input
+          ref={inputRef}
+          placeholder="Type a command (e.g. 'zen', 'tasks')..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setActiveIndex(0);
+          }}
+          onKeyDown={handleKeyDown}
+        />
+        <div className="command-actions">
+          {actions.map((action, index) => (
+            <div
+              key={action.id}
+              className={`command-item ${index === activeIndex ? 'active' : ''}`}
+              onClick={() => {
+                onAction(action.id);
+                onClose();
+              }}
+            >
+              {action.icon}
+              <span>{action.label}</span>
+              <span className="command-shortcut">{action.category}</span>
+            </div>
+          ))}
+          {actions.length === 0 && (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              No commands found...
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, onLogout }) => {
   const [view, setView] = useState<'tasks' | 'history' | 'insights' | 'zen'>('tasks');
   const [newTaskText, setNewTaskText] = useState('');
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, []);
+
+  const handleCommand = async (id: string) => {
+    if (id === 'tasks') setView('tasks');
+    else if (id === 'history') setView('history');
+    else if (id === 'insights') setView('insights');
+    else if (id === 'zen') setView('zen');
+    else if (id === 'new-task') {
+      setView('tasks');
+      setTimeout(() => {
+        const input = document.querySelector(
+          'input[placeholder="What needs to be done?"]'
+        ) as HTMLInputElement;
+        input?.focus();
+      }, 100);
+    } else if (id === 'clear-completed') {
+      if (confirm('Clear all completed tasks?')) {
+        const completed = await db.todos.where('completed').equals(1).toArray();
+        await db.todos.bulkDelete(completed.map((t) => t.id));
+      }
+    }
+  };
   const [reminderDate, setReminderDate] = useState<Date | null>(null);
   const [confirmTask, setConfirmTask] = useState<string | null>(null);
   const [lateConfirmTask, setLateConfirmTask] = useState<string | null>(null);
@@ -1276,6 +1402,11 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
 
   return (
     <div className="app-container">
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onAction={handleCommand}
+      />
       <header style={{ position: 'relative', paddingBottom: '1rem' }}>
         <button
           onClick={onLogout}
@@ -1339,6 +1470,42 @@ const TodoApp: React.FC<{ userId: string; onLogout: () => void }> = ({ userId, o
           <h1 style={{ margin: 0, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>Aura</h1>
         </div>
         <p style={{ color: 'var(--text-muted)' }}>Focus on what matters.</p>
+        <div
+          onClick={() => setIsCommandPaletteOpen(true)}
+          style={{
+            marginTop: '1.25rem',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--border)',
+            borderRadius: '0.75rem',
+            padding: '0.6rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            maxWidth: '280px',
+            margin: '1.25rem auto 0 auto',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.borderColor = 'var(--primary)';
+            e.currentTarget.style.color = 'var(--text-main)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.color = 'var(--text-muted)';
+          }}
+        >
+          <Search size={16} />
+          <span style={{ fontSize: '0.85rem', flex: 1, textAlign: 'left' }}>
+            Search commands...
+          </span>
+          <span className="command-shortcut" style={{ fontSize: '0.65rem', opacity: 0.8 }}>
+            Ctrl K
+          </span>
+        </div>
       </header>
 
       {view === 'tasks' && (
